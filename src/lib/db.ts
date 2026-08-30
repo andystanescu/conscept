@@ -22,7 +22,7 @@ globalForDb.__conscept_db = db;
 // GoDaddy may collect API routes in parallel during its production build.
 // Wait briefly when another worker is initializing the same SQLite file
 // instead of failing immediately with SQLITE_BUSY / "database is locked".
-db.exec("PRAGMA busy_timeout = 10000;");
+db.exec("PRAGMA busy_timeout = 30000;");
 
 db.exec(`
   CREATE TABLE IF NOT EXISTS case_studies (
@@ -152,11 +152,19 @@ db.exec(`
 // Migrate columns added after the tables were first created (CREATE TABLE
 // IF NOT EXISTS above only applies to brand-new databases).
 function addColumnIfMissing(table: string, column: string, ddl: string) {
-  const columns = db.prepare(`PRAGMA table_info(${table})`).all() as {
+  const safeTable = table.replaceAll('"', '""');
+  const columns = db.prepare(`PRAGMA table_info("${safeTable}")`).all() as {
     name: string;
   }[];
   if (!columns.some((c) => c.name === column)) {
-    db.exec(`ALTER TABLE ${table} ADD COLUMN ${ddl}`);
+    try {
+      db.exec(`ALTER TABLE "${safeTable}" ADD COLUMN ${ddl}`);
+    } catch (error) {
+      // Parallel Next.js workers can pass the check before one worker adds
+      // the column. In that case the migration is already complete.
+      const message = error instanceof Error ? error.message : String(error);
+      if (!/duplicate column name/i.test(message)) throw error;
+    }
   }
 }
 addColumnIfMissing("case_studies", "body", "body TEXT NOT NULL DEFAULT ''");
