@@ -1,3 +1,4 @@
+import { relativeRedirect } from "@/lib/relativeRedirect";
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { updateSettings } from "@/lib/settings";
@@ -35,5 +36,5 @@ export async function POST(request: NextRequest) {
     logo_image: logoImage,
     logo_image_footer: logoImageFooter,
   });
-  return NextResponse.redirect(new URL("/admin", request.url), 303);
+  return relativeRedirect("/admin");
 }

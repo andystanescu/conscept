@@ -1,3 +1,4 @@
+import { relativeRedirect } from "@/lib/relativeRedirect";
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 
@@ -29,5 +30,5 @@ export async function POST(
     }
   }
 
-  return NextResponse.redirect(new URL("/admin/case-studies", request.url), 303);
+  return relativeRedirect("/admin/case-studies");
 }

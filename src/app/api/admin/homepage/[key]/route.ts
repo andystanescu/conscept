@@ -1,3 +1,4 @@
+import { relativeRedirect } from "@/lib/relativeRedirect";
 import { NextRequest, NextResponse } from "next/server";
 import { getSection, updateSection } from "@/lib/homepage";
 
@@ -24,7 +25,7 @@ export async function POST(
   if (!headline) {
     const url = new URL(`/admin/homepage/${key}`, request.url);
     url.searchParams.set("error", "Headline is required.");
-    return NextResponse.redirect(url, 303);
+    return relativeRedirect(url.pathname + url.search);
   }
 
   updateSection(key, {
@@ -38,5 +39,5 @@ export async function POST(
     visible,
   });
 
-  return NextResponse.redirect(new URL("/admin/homepage", request.url), 303);
+  return relativeRedirect("/admin/homepage");
 }

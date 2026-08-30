@@ -1,3 +1,4 @@
+import { relativeRedirect } from "@/lib/relativeRedirect";
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import type { Insight } from "@/data/insights";
@@ -23,7 +24,7 @@ export async function POST(
   if (!slug || !title || !excerpt) {
     const url = new URL(`/admin/insights/${id}`, request.url);
     url.searchParams.set("error", "Slug, title, and excerpt are required.");
-    return NextResponse.redirect(url, 303);
+    return relativeRedirect(url.pathname + url.search);
   }
 
   const existing = db
@@ -63,8 +64,8 @@ export async function POST(
   } catch {
     const url = new URL(`/admin/insights/${id}`, request.url);
     url.searchParams.set("error", `An insight with slug "${slug}" already exists.`);
-    return NextResponse.redirect(url, 303);
+    return relativeRedirect(url.pathname + url.search);
   }
 
-  return NextResponse.redirect(new URL("/admin/insights", request.url), 303);
+  return relativeRedirect("/admin/insights");
 }

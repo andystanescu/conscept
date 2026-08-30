@@ -1,3 +1,4 @@
+import { relativeRedirect } from "@/lib/relativeRedirect";
 import { NextRequest, NextResponse } from "next/server";
 import { getPage, updatePage } from "@/lib/pages";
 import { applyHeadingAccents } from "@/lib/headingAccents";
@@ -28,7 +29,7 @@ export async function POST(
   if (!title) {
     const url = new URL(`/admin/pages/${slug}`, request.url);
     url.searchParams.set("error", "Title is required.");
-    return NextResponse.redirect(url, 303);
+    return relativeRedirect(url.pathname + url.search);
   }
 
   updatePage(slug, { eyebrow, title, body, showInNav, navLabel, visible });
@@ -63,5 +64,5 @@ export async function POST(
     });
   }
 
-  return NextResponse.redirect(new URL(redirectTo, request.url), 303);
+  return relativeRedirect(redirectTo);
 }

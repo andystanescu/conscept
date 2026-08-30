@@ -1,3 +1,4 @@
+import { relativeRedirect } from "@/lib/relativeRedirect";
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import type { CaseStudy } from "@/data/caseStudies";
@@ -48,7 +49,7 @@ export async function POST(
     }
     const url = new URL(`/admin/case-studies/${id}`, request.url);
     url.searchParams.set("error", "Slug, title, and description are required.");
-    return NextResponse.redirect(url, 303);
+    return relativeRedirect(url.pathname + url.search);
   }
 
   const existing = db
@@ -109,12 +110,12 @@ export async function POST(
   } catch {
     const url = new URL(`/admin/case-studies/${id}`, request.url);
     url.searchParams.set("error", `A case study with slug "${slug}" already exists.`);
-    return NextResponse.redirect(url, 303);
+    return relativeRedirect(url.pathname + url.search);
   }
 
   if (intent === "draft") {
     return NextResponse.json({ saved: true, published: Boolean(published) });
   }
 
-  return NextResponse.redirect(new URL("/admin/case-studies", request.url), 303);
+  return relativeRedirect("/admin/case-studies");
 }

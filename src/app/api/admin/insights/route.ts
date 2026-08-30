@@ -1,3 +1,4 @@
+import { relativeRedirect } from "@/lib/relativeRedirect";
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { resolveImageField } from "@/lib/uploads";
@@ -18,7 +19,7 @@ export async function POST(request: NextRequest) {
   if (!slug || !title || !excerpt) {
     const url = new URL("/admin/insights/new", request.url);
     url.searchParams.set("error", "Slug, title, and excerpt are required.");
-    return NextResponse.redirect(url, 303);
+    return relativeRedirect(url.pathname + url.search);
   }
 
   const coverImage = await resolveImageField(form, "cover_image", "");
@@ -49,8 +50,8 @@ export async function POST(request: NextRequest) {
   } catch {
     const url = new URL("/admin/insights/new", request.url);
     url.searchParams.set("error", `An insight with slug "${slug}" already exists.`);
-    return NextResponse.redirect(url, 303);
+    return relativeRedirect(url.pathname + url.search);
   }
 
-  return NextResponse.redirect(new URL("/admin/insights", request.url), 303);
+  return relativeRedirect("/admin/insights");
 }

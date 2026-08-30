@@ -1,3 +1,4 @@
+import { relativeRedirect } from "@/lib/relativeRedirect";
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 
@@ -7,5 +8,5 @@ export async function POST(
 ) {
   const { id } = await params;
   db.prepare("DELETE FROM about_highlight_items WHERE id = ?").run(id);
-  return NextResponse.redirect(new URL("/admin/about-highlights", request.url), 303);
+  return relativeRedirect("/admin/about-highlights");
 }

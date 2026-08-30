@@ -1,3 +1,4 @@
+import { relativeRedirect } from "@/lib/relativeRedirect";
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import type { AboutItem } from "@/lib/about";
@@ -16,7 +17,7 @@ export async function POST(
   if (!title || !description) {
     const url = new URL(`/admin/about-highlights/${id}`, request.url);
     url.searchParams.set("error", "Title and description are required.");
-    return NextResponse.redirect(url, 303);
+    return relativeRedirect(url.pathname + url.search);
   }
 
   const existing = db
@@ -31,5 +32,5 @@ export async function POST(
      WHERE id = ?`
   ).run(title, description, icon, published, id);
 
-  return NextResponse.redirect(new URL("/admin/about-highlights", request.url), 303);
+  return relativeRedirect("/admin/about-highlights");
 }
