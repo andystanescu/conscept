@@ -3,7 +3,12 @@ import { mkdir, writeFile } from "fs/promises";
 import { existsSync } from "fs";
 import { join } from "path";
 
-const uploadsDir = join(process.cwd(), "public", "uploads");
+// Keep this configurable for hosts that provide a persistent writable
+// directory outside the build output. The route that serves uploads uses the
+// same resolver, so saving and reading always target the same location.
+export function getUploadsDir(): string {
+  return process.env.UPLOADS_DIR?.trim() || join(process.cwd(), "public", "uploads");
+}
 
 const ALLOWED_TYPES: Record<string, string> = {
   "image/jpeg": "jpg",
@@ -33,6 +38,7 @@ export async function saveUploadedImage(file: File): Promise<string> {
     throw new UploadError("Image is too large — 8MB max.");
   }
 
+  const uploadsDir = getUploadsDir();
   if (!existsSync(uploadsDir)) {
     await mkdir(uploadsDir, { recursive: true });
   }
