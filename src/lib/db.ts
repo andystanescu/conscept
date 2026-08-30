@@ -18,6 +18,10 @@ const globalForDb = globalThis as unknown as { __conscept_db?: DatabaseSync };
 
 export const db = globalForDb.__conscept_db ?? new DatabaseSync(dbPath);
 globalForDb.__conscept_db = db;
+
+// GoDaddy may collect API routes in parallel during its production build.
+// Wait briefly when another worker is initializing the same SQLite file
+// instead of failing immediately with SQLITE_BUSY / "database is locked".
 db.exec("PRAGMA busy_timeout = 10000;");
 
 db.exec(`

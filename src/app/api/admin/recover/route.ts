@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { saveAdminCredentials, verifyCredentials } from "@/lib/auth";
+import { relativeRedirect } from "@/lib/relativeRedirect";
 
 export async function POST(request: NextRequest) {
   const form = await request.formData();
@@ -10,10 +11,8 @@ export async function POST(request: NextRequest) {
   const confirmation = String(form.get("confirmation") ?? "");
 
   const redirectWithError = (message: string) => {
-    const url = new URL("/admin/login", request.url);
-    url.searchParams.set("mode", "recovery");
-    url.searchParams.set("error", message);
-    return NextResponse.redirect(url, 303);
+    const params = new URLSearchParams({ mode: "recovery", error: message });
+    return relativeRedirect(`/admin/login?${params}`);
   };
 
   if (!(await verifyCredentials(username, currentPassword))) {
@@ -23,7 +22,8 @@ export async function POST(request: NextRequest) {
   if (newPassword !== confirmation) return redirectWithError("Passwords do not match.");
 
   saveAdminCredentials(username, await bcrypt.hash(newPassword, 12));
-  const url = new URL("/admin/login", request.url);
-  url.searchParams.set("success", "Your admin password has been updated. Sign in to continue.");
-  return NextResponse.redirect(url, 303);
+  const params = new URLSearchParams({
+    success: "Your admin password has been updated. Sign in to continue.",
+  });
+  return relativeRedirect(`/admin/login?${params}`);
 }
