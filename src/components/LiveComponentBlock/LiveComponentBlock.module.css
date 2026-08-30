@@ -1,0 +1,19 @@
+.preview {
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  min-height: 0;
+}
+
+.error {
+  margin: 0;
+  padding: var(--space-300);
+  border-top: 1px solid var(--border-error);
+  background: rgba(217, 45, 32, 0.08);
+  color: var(--border-error);
+  font-family: var(--font-family-mono);
+  font-size: 13px;
+  white-space: pre-wrap;
+}

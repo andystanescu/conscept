@@ -1,0 +1,114 @@
+import { db } from "@/lib/db";
+
+export type SettingsMap = {
+  logo_identity: "business" | "personal";
+  work_outcome_title: string;
+  work_outcome_body: string;
+  approach_principle_eyebrow: string;
+  approach_principle_title: string;
+  approach_principle_body: string;
+  approach_how_eyebrow: string;
+  approach_how_title: string;
+  approach_leave_eyebrow: string;
+  approach_leave_one_title: string;
+  approach_leave_one_body: string;
+  approach_leave_two_title: string;
+  approach_leave_two_body: string;
+  approach_leave_three_title: string;
+  approach_leave_three_body: string;
+  approach_shared_title: string;
+  approach_shared_body: string;
+  approach_audience_leadership_title: string;
+  approach_audience_leadership_body: string;
+  approach_audience_product_title: string;
+  approach_audience_product_body: string;
+  approach_audience_org_title: string;
+  approach_audience_org_body: string;
+  confirmation_title: string;
+  confirmation_body: string;
+  contact_email_to: string;
+  logo_image: string;
+  logo_image_footer: string;
+};
+
+const KEYS: (keyof SettingsMap)[] = [
+  "logo_identity",
+  "work_outcome_title",
+  "work_outcome_body",
+  "approach_principle_eyebrow",
+  "approach_principle_title",
+  "approach_principle_body",
+  "approach_how_eyebrow",
+  "approach_how_title",
+  "approach_leave_eyebrow",
+  "approach_leave_one_title",
+  "approach_leave_one_body",
+  "approach_leave_two_title",
+  "approach_leave_two_body",
+  "approach_leave_three_title",
+  "approach_leave_three_body",
+  "approach_shared_title",
+  "approach_shared_body",
+  "approach_audience_leadership_title",
+  "approach_audience_leadership_body",
+  "approach_audience_product_title",
+  "approach_audience_product_body",
+  "approach_audience_org_title",
+  "approach_audience_org_body",
+  "confirmation_title",
+  "confirmation_body",
+  "contact_email_to",
+  "logo_image",
+  "logo_image_footer",
+];
+
+export function getSettings(): SettingsMap {
+  const rows = db.prepare("SELECT key, value FROM settings").all() as {
+    key: string;
+    value: string;
+  }[];
+  const map = Object.fromEntries(rows.map((r) => [r.key, r.value]));
+  return {
+    logo_identity: map.logo_identity === "personal" ? "personal" : "business",
+    work_outcome_title: map.work_outcome_title ?? "Better systems make better work repeatable.",
+    work_outcome_body: map.work_outcome_body ?? "Clarity compounds: decisions become easier, teams move with more confidence and products improve over time.",
+    approach_principle_eyebrow: map.approach_principle_eyebrow ?? "THE PRINCIPLE",
+    approach_principle_title: map.approach_principle_title ?? "Solve the system, not just the symptom.",
+    approach_principle_body: map.approach_principle_body ?? "My work is designed to leave teams with stronger reasoning, clearer ownership and systems that can evolve.",
+    approach_how_eyebrow: map.approach_how_eyebrow ?? "HOW I WORK",
+    approach_how_title: map.approach_how_title ?? "A practical path from ambiguity to momentum.",
+    approach_leave_eyebrow: map.approach_leave_eyebrow ?? "WHAT I LEAVE BEHIND",
+    approach_leave_one_title: map.approach_leave_one_title ?? "Start with causes",
+    approach_leave_one_body: map.approach_leave_one_body ?? "Understand the relationships behind the visible problem.",
+    approach_leave_two_title: map.approach_leave_two_title ?? "Make thinking visible",
+    approach_leave_two_body: map.approach_leave_two_body ?? "Turn tacit knowledge into shared principles and decisions.",
+    approach_leave_three_title: map.approach_leave_three_title ?? "Build independence",
+    approach_leave_three_body: map.approach_leave_three_body ?? "Leave teams stronger and more capable than I found them.",
+    approach_shared_title: map.approach_shared_title ?? "A shared way of working",
+    approach_shared_body: map.approach_shared_body ?? "The best outcomes happen when the work becomes part of the team—not a handoff at the end.",
+    approach_audience_leadership_title: map.approach_audience_leadership_title ?? "For leadership",
+    approach_audience_leadership_body: map.approach_audience_leadership_body ?? "Clearer priorities, better trade-offs and a foundation that supports growth.",
+    approach_audience_product_title: map.approach_audience_product_title ?? "For product teams",
+    approach_audience_product_body: map.approach_audience_product_body ?? "A practical system that connects decisions across design, engineering and product.",
+    approach_audience_org_title: map.approach_audience_org_title ?? "For the organisation",
+    approach_audience_org_body: map.approach_audience_org_body ?? "Knowledge and principles that compound beyond a single project.",
+    confirmation_title: map.confirmation_title ?? "",
+    confirmation_body: map.confirmation_body ?? "",
+    contact_email_to: map.contact_email_to ?? "",
+    logo_image: map.logo_image ?? "",
+    // Falls back to the header logo so existing single-logo setups don't
+    // lose their footer logo the moment this field exists but is unset.
+    logo_image_footer: map.logo_image_footer || map.logo_image || "",
+  };
+}
+
+export function updateSettings(update: Partial<SettingsMap>) {
+  const stmt = db.prepare(
+    "INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value"
+  );
+  for (const key of KEYS) {
+    if (update[key] !== undefined) {
+      stmt.run(key, update[key]);
+    }
+  }
+}

@@ -1,0 +1,67 @@
+import { getAllSections } from "@/lib/homepage";
+import { ReorderableList } from "@/components/admin/ReorderableList/ReorderableList";
+import { InlineSectionCard } from "@/components/admin/InlineSectionCard/InlineSectionCard";
+import styles from "../admin.module.css";
+
+export const dynamic = "force-dynamic";
+
+const LABELS: Record<string, string> = {
+  hero: "Hero",
+  services: "Services",
+  approach: "Approach",
+  selected_impact: "Selected Impact",
+  latest_insights: "Latest Insights",
+};
+
+export default function AdminHomepagePage() {
+  const sections = getAllSections();
+  const fixedSections = sections.filter((s) => s.fixed);
+  const reorderable = sections.filter((s) => !s.fixed);
+
+  return (
+    <>
+      <div className={styles.toolbar}>
+        <h1 className="heading-01">Homepage</h1>
+      </div>
+      <p className={`body-small ${styles.helper}`} style={{ maxWidth: 640 }}>
+        Nav, Hero, and Footer are always in that position. The sections in
+        between can be reordered — drag them, or use the arrows. Wrap a word
+        in #like this# to color it orange.
+      </p>
+
+      <ul className={styles.list}>{fixedSections.map((section) => <li key={section.key} className={styles.listItem}><InlineSectionCard section={section} label={LABELS[section.key] ?? section.key} parent="homepage" fixed /></li>)}</ul>
+
+      <ReorderableList
+        className={styles.list}
+        itemClassName={styles.listItem}
+        reorderUrl="/api/admin/homepage/reorder"
+        style={{ marginTop: "var(--space-200)" }}
+        items={reorderable.map((section, index) => ({
+          id: section.key,
+          node: (
+            <>
+              <InlineSectionCard section={section} label={LABELS[section.key] ?? section.key} parent="homepage" reorder={<>
+                <form action={`/api/admin/homepage/${section.key}/move`} method="POST">
+                  <input type="hidden" name="direction" value="up" />
+                  <button type="submit" disabled={index === 0} aria-label="Move up">
+                    ↑
+                  </button>
+                </form>
+                <form action={`/api/admin/homepage/${section.key}/move`} method="POST">
+                  <input type="hidden" name="direction" value="down" />
+                  <button
+                    type="submit"
+                    disabled={index === reorderable.length - 1}
+                    aria-label="Move down"
+                  >
+                    ↓
+                  </button>
+                </form>
+              </>}/>
+            </>
+          ),
+        }))}
+      />
+    </>
+  );
+}

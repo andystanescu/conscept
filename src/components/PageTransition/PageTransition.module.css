@@ -1,0 +1,43 @@
+.page {
+  /* The wrapper stays still so the persistent navigation and footer never
+     participate in page transitions. */
+}
+
+.page > :not(header):not(footer):not(.wipe) {
+  will-change: transform;
+  animation: depth-in 100ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.pageExit > :not(header):not(footer):not(.wipe) {
+  animation: depth-out 500ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  pointer-events: none;
+}
+
+@keyframes depth-in {
+  from {
+    opacity: 0;
+    transform: scale(1.025);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes depth-out {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(.975);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page > :not(header):not(footer):not(.wipe),
+  .pageExit > :not(header):not(footer):not(.wipe) {
+    animation: none;
+  }
+}

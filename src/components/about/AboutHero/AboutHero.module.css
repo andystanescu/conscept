@@ -1,0 +1,33 @@
+.hero {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-800);
+  padding-block: var(--space-800);
+  background: var(--bg-canvas);
+}
+
+.copy {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-300);
+  width: 560px;
+  max-width: 100%;
+}
+
+.headline {
+  color: var(--text-primary);
+}
+
+.lattice {
+  flex: 1 1 220px;
+  min-width: 0;
+  display: flex;
+  justify-content: flex-end;
+}
+
+@media (max-width: 900px) {
+  .lattice {
+    justify-content: center;
+  }
+}
