@@ -16,8 +16,9 @@ type ArticleCardProps = {
 // articles" grid; kept separate from the homepage's larger featured-card
 // layout (LatestInsights), which has its own hover treatment.
 export function ArticleCard({ slug, title, excerpt, thumbnail, className, variant = "default" }: ArticleCardProps) {
+  const isCaseStudy = variant === "caseStudy";
   return (
-    <Link href={`/insights/${slug}`} className={`${styles.card} ${variant === "caseStudy" ? styles.caseStudy : ""}${className ? ` ${className}` : ""}`}>
+    <Link href={`${isCaseStudy ? "/work" : "/insights"}/${slug}`} className={`${styles.card} ${isCaseStudy ? styles.caseStudy : ""}${className ? ` ${className}` : ""}`}>
       <div
         className={styles.thumb}
         style={thumbnail ? { backgroundImage: `url(${thumbnail})` } : undefined}
@@ -29,7 +30,7 @@ export function ArticleCard({ slug, title, excerpt, thumbnail, className, varian
           {excerpt}
         </p>
         <span className={styles.link}>
-          Read article
+          {isCaseStudy ? "View case study" : "Read article"}
           <ArrowIcon size={14} />
         </span>
       </div>
