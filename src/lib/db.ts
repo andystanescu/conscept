@@ -18,6 +18,7 @@ const globalForDb = globalThis as unknown as { __conscept_db?: DatabaseSync };
 
 export const db = globalForDb.__conscept_db ?? new DatabaseSync(dbPath);
 globalForDb.__conscept_db = db;
+db.exec("PRAGMA busy_timeout = 10000;");
 
 db.exec(`
   CREATE TABLE IF NOT EXISTS case_studies (
