@@ -182,6 +182,8 @@ addColumnIfMissing("case_studies", "metrics", "metrics TEXT NOT NULL DEFAULT '[]
 addColumnIfMissing("case_studies", "assessment", "assessment TEXT NOT NULL DEFAULT '{}'");
 addColumnIfMissing("case_studies", "password_required", "password_required INTEGER NOT NULL DEFAULT 0");
 addColumnIfMissing("case_studies", "password_hashes", "password_hashes TEXT NOT NULL DEFAULT '[]'");
+addColumnIfMissing("case_studies", "author", "author TEXT NOT NULL DEFAULT 'Andrei Stanescu'");
+addColumnIfMissing("case_studies", "published_at", "published_at TEXT NOT NULL DEFAULT ''");
 addColumnIfMissing(
   "case_studies",
   "cover_image",

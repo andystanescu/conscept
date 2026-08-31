@@ -34,6 +34,12 @@ export default async function AdminSettingsPage() {
         encType="multipart/form-data"
       >
         <label className={styles.field}>
+          <span className="label-small" style={{ color: "var(--text-secondary)" }}>Author name</span>
+          <input type="text" name="author_name" defaultValue={settings.author_name} placeholder="Andrei Stanescu" className={styles.input} />
+          <span className="body-small" style={{ color: "var(--text-tertiary)" }}>Automatically applied when articles and case studies are saved.</span>
+        </label>
+
+        <label className={styles.field}>
           <span className="label-small" style={{ color: "var(--text-secondary)" }}>
             Contact form: send submissions to
           </span>

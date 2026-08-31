@@ -8,7 +8,7 @@ export async function GET() {
       `SELECT slug, eyebrow, title, description, tags, position, published,
               body, cover_image, thumbnail_image, category, year,
               outcome_eyebrow, outcome_title, metrics, assessment,
-              password_required, password_hashes
+              password_required, password_hashes, author, published_at
        FROM case_studies ORDER BY position, id`
     )
     .all();

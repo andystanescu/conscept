@@ -4,6 +4,8 @@ import { db } from "@/lib/db";
 import type { Insight } from "@/data/insights";
 import { resolveImageField } from "@/lib/uploads";
 import { applyHeadingAccents } from "@/lib/headingAccents";
+import { getSettings } from "@/lib/settings";
+import { dateInputValue } from "@/lib/dateUtils";
 
 export async function POST(
   request: NextRequest,
@@ -15,10 +17,10 @@ export async function POST(
   const title = String(form.get("title") ?? "").trim();
   const excerpt = String(form.get("excerpt") ?? "").trim();
   const body = applyHeadingAccents(String(form.get("body") ?? "").trim());
-  const publishedAt = String(form.get("published_at") ?? "").trim();
+  const publishedAt = dateInputValue(String(form.get("published_at") ?? "").trim());
   const published = form.get("published") ? 1 : 0;
   const category = String(form.get("category") ?? "").trim();
-  const author = String(form.get("author") ?? "").trim() || "Andrei Stanescu";
+  const author = getSettings().author_name;
   const tags = String(form.get("tags") ?? "").trim();
 
   if (!slug || !title || !excerpt) {

@@ -3,6 +3,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { resolveImageField } from "@/lib/uploads";
 import { applyHeadingAccents } from "@/lib/headingAccents";
+import { getSettings } from "@/lib/settings";
+import { todayInputValue } from "@/lib/dateUtils";
 
 export async function POST(request: NextRequest) {
   const form = await request.formData();
@@ -13,7 +15,7 @@ export async function POST(request: NextRequest) {
   const publishedAt = String(form.get("published_at") ?? "").trim();
   const published = form.get("published") ? 1 : 0;
   const category = String(form.get("category") ?? "").trim();
-  const author = String(form.get("author") ?? "").trim() || "Andrei Stanescu";
+  const author = getSettings().author_name;
   const tags = String(form.get("tags") ?? "").trim();
 
   if (!slug || !title || !excerpt) {
@@ -40,7 +42,7 @@ export async function POST(request: NextRequest) {
       body,
       coverImage,
       thumbnailImage,
-      publishedAt || new Date().toLocaleDateString("en-US", { month: "long", year: "numeric" }),
+      publishedAt || todayInputValue(),
       maxPosition.max + 1,
       published,
       category,

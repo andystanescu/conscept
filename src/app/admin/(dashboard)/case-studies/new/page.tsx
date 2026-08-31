@@ -1,6 +1,7 @@
 import { RichTextEditor } from "@/components/admin/RichTextEditor/RichTextEditor";
 import { ImageField } from "@/components/admin/ImageField/ImageField";
 import styles from "../../admin.module.css";
+import { todayInputValue } from "@/lib/dateUtils";
 
 export default async function NewCaseStudyPage({
   searchParams,
@@ -19,6 +20,11 @@ export default async function NewCaseStudyPage({
         method="POST"
         encType="multipart/form-data"
       >
+        <label className={styles.field}>
+          <span className="label-small" style={{ color: "var(--text-secondary)" }}>Published date</span>
+          <input type="date" name="published_at" defaultValue={todayInputValue()} className={styles.input} />
+        </label>
+
         <label className={styles.field}>
           <span className="label-small" style={{ color: "var(--text-secondary)" }}>
             Slug (used in the URL: /work/…)

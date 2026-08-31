@@ -3,6 +3,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { resolveImageField } from "@/lib/uploads";
 import { applyHeadingAccents } from "@/lib/headingAccents";
+import { getSettings } from "@/lib/settings";
+import { dateInputValue } from "@/lib/dateUtils";
 
 export async function POST(request: NextRequest) {
   const form = await request.formData();
@@ -13,6 +15,8 @@ export async function POST(request: NextRequest) {
   const tags = String(form.get("tags") ?? "").trim();
   const body = applyHeadingAccents(String(form.get("body") ?? "").trim());
   const published = form.get("published") ? 1 : 0;
+  const author = getSettings().author_name;
+  const publishedAt = dateInputValue(String(form.get("published_at") ?? "").trim());
 
   if (!slug || !title || !description) {
     const url = new URL("/admin/case-studies/new", request.url);
@@ -29,8 +33,8 @@ export async function POST(request: NextRequest) {
 
   try {
     db.prepare(
-      `INSERT INTO case_studies (slug, eyebrow, title, description, tags, body, cover_image, thumbnail_image, position, published)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      `INSERT INTO case_studies (slug, eyebrow, title, description, tags, body, cover_image, thumbnail_image, position, published, author, published_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     ).run(
       slug,
       eyebrow,
@@ -41,7 +45,9 @@ export async function POST(request: NextRequest) {
       coverImage,
       thumbnailImage,
       maxPosition.max + 1,
-      published
+      published,
+      author,
+      publishedAt
     );
   } catch {
     const url = new URL("/admin/case-studies/new", request.url);

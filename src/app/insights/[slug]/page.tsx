@@ -13,6 +13,7 @@ import { ShareArticle } from "@/components/ShareArticle/ShareArticle";
 import { BackButton } from "@/components/BackButton/BackButton";
 import styles from "./insight.module.css";
 import { contentMetadata, absoluteUrl } from "@/lib/seo";
+import { displayDate } from "@/lib/dateUtils";
 
 export const dynamic = "force-dynamic";
 
@@ -73,7 +74,7 @@ export default async function InsightDetailPage({
                 {insight.author}
               </p>
               <p className="body-small" style={{ color: "var(--text-tertiary)" }}>
-                {insight.published_at} &nbsp;•&nbsp; {readingMinutes} min read
+                {displayDate(insight.published_at)} &nbsp;•&nbsp; {readingMinutes} min read
               </p>
               {insight.tags && (
                 <p className={styles.tags}>{insight.tags}</p>

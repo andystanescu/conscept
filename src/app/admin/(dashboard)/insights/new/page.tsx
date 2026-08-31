@@ -2,6 +2,8 @@ import { RichTextEditor } from "@/components/admin/RichTextEditor/RichTextEditor
 import { ImageField } from "@/components/admin/ImageField/ImageField";
 import { getServiceItems } from "@/lib/serviceItems";
 import styles from "../../admin.module.css";
+import { todayInputValue } from "@/lib/dateUtils";
+import { getSettings } from "@/lib/settings";
 
 export default async function NewInsightPage({
   searchParams,
@@ -10,6 +12,7 @@ export default async function NewInsightPage({
 }) {
   const { error } = await searchParams;
   const categories = getServiceItems();
+  const settings = getSettings();
 
   return (
     <>
@@ -65,12 +68,13 @@ export default async function NewInsightPage({
 
         <label className={styles.field}>
           <span className="label-small" style={{ color: "var(--text-secondary)" }}>
-            Author
+            Author (from Settings)
           </span>
           <input
             type="text"
             name="author"
-            defaultValue="Andrei Stanescu"
+            value={settings.author_name}
+            readOnly
             className={styles.input}
           />
         </label>
@@ -104,9 +108,9 @@ export default async function NewInsightPage({
 
         <label className={styles.field}>
           <span className="label-small" style={{ color: "var(--text-secondary)" }}>
-            Published date (shown as text, e.g. &ldquo;August 2026&rdquo;)
+            Published date
           </span>
-          <input type="text" name="published_at" className={styles.input} />
+          <input type="date" name="published_at" defaultValue={todayInputValue()} className={styles.input} />
         </label>
 
         <div className={styles.formActions}>

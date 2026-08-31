@@ -9,6 +9,7 @@ import type { CaseStudyAssessment } from "@/data/caseStudyAssessment";
 import { assessmentCriteriaList, generateActivityRecommendations, getPrimaryComplexityDrivers } from "@/data/caseStudyAssessment";
 import styles from "./CaseStudyEditor.module.css";
 import adminStyles from "@/app/admin/(dashboard)/admin.module.css";
+import { dateInputValue } from "@/lib/dateUtils";
 
 type ServiceOption = { slug: string; title: string };
 type PasswordEntry = { name: string; masked: string };
@@ -71,6 +72,8 @@ export function CaseStudyEditor({ study, metrics, assessment, services, password
         <Field label="Eyebrow"><input name="eyebrow" defaultValue={study.eyebrow} className={adminStyles.input} /></Field>
         <Field label="Title"><input name="title" defaultValue={study.title} required className={adminStyles.input} /></Field>
         <Field label="Description"><textarea name="description" defaultValue={study.description} required className={adminStyles.textarea} /></Field>
+        <Field label="Author (from Settings)"><input value={study.author || ""} readOnly className={adminStyles.input} /><small className="body-small">The current author name is applied automatically when this case study is saved.</small></Field>
+        <Field label="Published date"><input type="date" name="published_at" defaultValue={dateInputValue(study.published_at)} className={adminStyles.input} /></Field>
         <TagEditor initialValue={study.tags} onCommit={scheduleDraftSave} />
         <Field label="Cover image (shown at the top of the case study)"><ImageField name="cover_image" currentUrl={study.cover_image} /></Field>
         <Field label="Thumbnail image (shown on cards and listings)"><ImageField name="thumbnail_image" currentUrl={study.thumbnail_image} /></Field>

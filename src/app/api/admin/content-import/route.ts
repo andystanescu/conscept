@@ -42,8 +42,9 @@ export async function POST(request: NextRequest) {
         `INSERT INTO case_studies
           (slug, eyebrow, title, description, tags, position, published, body,
            cover_image, thumbnail_image, category, year, outcome_eyebrow,
-           outcome_title, metrics, assessment, password_required, password_hashes)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+           outcome_title, metrics, assessment, password_required, password_hashes,
+           author, published_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
          ON CONFLICT(slug) DO UPDATE SET
           eyebrow=excluded.eyebrow, title=excluded.title, description=excluded.description,
           tags=excluded.tags, position=excluded.position, published=excluded.published,
@@ -52,7 +53,8 @@ export async function POST(request: NextRequest) {
           year=excluded.year, outcome_eyebrow=excluded.outcome_eyebrow,
           outcome_title=excluded.outcome_title, metrics=excluded.metrics,
           assessment=excluded.assessment, password_required=excluded.password_required,
-          password_hashes=excluded.password_hashes`
+          password_hashes=excluded.password_hashes, author=excluded.author,
+          published_at=excluded.published_at`
       );
       for (const record of caseStudies) {
         const slug = text(record, "slug").trim();
@@ -64,7 +66,8 @@ export async function POST(request: NextRequest) {
           text(record, "body"), text(record, "cover_image"), text(record, "thumbnail_image"),
           text(record, "category"), text(record, "year"), text(record, "outcome_eyebrow", "OUTCOMES"),
           text(record, "outcome_title"), list(record.metrics), list(record.assessment),
-          integer(record, "password_required"), list(record.password_hashes)
+          integer(record, "password_required"), list(record.password_hashes),
+          text(record, "author", "Andrei Stanescu"), text(record, "published_at")
         );
       }
 

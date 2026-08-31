@@ -5,6 +5,7 @@ import { RichTextEditor } from "@/components/admin/RichTextEditor/RichTextEditor
 import { ImageField } from "@/components/admin/ImageField/ImageField";
 import { getServiceItems } from "@/lib/serviceItems";
 import styles from "../../admin.module.css";
+import { dateInputValue } from "@/lib/dateUtils";
 
 export const dynamic = "force-dynamic";
 
@@ -103,12 +104,13 @@ export default async function EditInsightPage({
 
         <label className={styles.field}>
           <span className="label-small" style={{ color: "var(--text-secondary)" }}>
-            Author
+            Author (from Settings)
           </span>
           <input
             type="text"
             name="author"
-            defaultValue={insight.author}
+            value={insight.author}
+            readOnly
             className={styles.input}
           />
         </label>
@@ -145,9 +147,9 @@ export default async function EditInsightPage({
             Published date
           </span>
           <input
-            type="text"
+            type="date"
             name="published_at"
-            defaultValue={insight.published_at}
+            defaultValue={dateInputValue(insight.published_at)}
             className={styles.input}
           />
         </label>

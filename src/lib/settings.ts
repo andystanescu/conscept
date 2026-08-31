@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 
 export type SettingsMap = {
+  author_name: string;
   logo_identity: "business" | "personal";
   work_outcome_title: string;
   work_outcome_body: string;
@@ -32,6 +33,7 @@ export type SettingsMap = {
 };
 
 const KEYS: (keyof SettingsMap)[] = [
+  "author_name",
   "logo_identity",
   "work_outcome_title",
   "work_outcome_body",
@@ -69,6 +71,7 @@ export function getSettings(): SettingsMap {
   }[];
   const map = Object.fromEntries(rows.map((r) => [r.key, r.value]));
   return {
+    author_name: map.author_name ?? "Andrei Stanescu",
     logo_identity: map.logo_identity === "personal" ? "personal" : "business",
     work_outcome_title: map.work_outcome_title ?? "Better systems make better work repeatable.",
     work_outcome_body: map.work_outcome_body ?? "Clarity compounds: decisions become easier, teams move with more confidence and products improve over time.",
