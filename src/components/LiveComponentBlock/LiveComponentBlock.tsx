@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { LiveProvider, LivePreview, LiveError } from "react-live";
+import { LiveContext, LiveProvider, LivePreview, LiveError } from "react-live";
 import styles from "./LiveComponentBlock.module.css";
 
 type LiveComponentBlockProps = {
@@ -51,10 +51,51 @@ export function LiveComponentBlock({ code }: LiveComponentBlockProps) {
       language="tsx"
       enableTypeScript
     >
-      <div className={styles.preview}>
-        <LivePreview />
-      </div>
-      <LiveError className={styles.error} />
+      <LiveComponentSurface code={preparedCode} />
     </LiveProvider>
+  );
+}
+
+function LiveComponentSurface({ code }: { code: string }) {
+  const { error, element } = React.useContext(LiveContext);
+  const [view, setView] = React.useState<"preview" | "code">("preview");
+  const [copied, setCopied] = React.useState(false);
+  const canRender = Boolean(element) && !error;
+
+  React.useEffect(() => {
+    if (error) setView("code");
+  }, [error]);
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(code);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1600);
+    } catch {
+      setCopied(false);
+    }
+  };
+
+  return (
+    <>
+      <div className={styles.header}>
+        <span className={styles.language}>tsx</span>
+        <div className={styles.headerActions}>
+          {canRender && (
+            <div className={styles.switcher} role="tablist" aria-label="Live component view">
+              <button type="button" role="tab" aria-selected={view === "preview"} className={view === "preview" ? styles.switcherActive : ""} onClick={() => setView("preview")}>Preview</button>
+              <button type="button" role="tab" aria-selected={view === "code"} className={view === "code" ? styles.switcherActive : ""} onClick={() => setView("code")}>Code</button>
+            </div>
+          )}
+          <button type="button" className={styles.copyButton} onClick={handleCopy}>{copied ? "Copied" : "Copy"}</button>
+        </div>
+      </div>
+      {view === "preview" && canRender ? (
+        <div className={styles.preview}><LivePreview /></div>
+      ) : (
+        <pre className={styles.code}><code>{code}</code></pre>
+      )}
+      {error && <LiveError className={styles.error} />}
+    </>
   );
 }

@@ -202,6 +202,7 @@ export function RichTextEditor({
 }: RichTextEditorProps) {
   const hiddenInputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const comparisonInputRef = useRef<HTMLInputElement>(null);
   const typeStyleRef = useRef<HTMLDivElement>(null);
   const [typeStyleOpen, setTypeStyleOpen] = useState(false);
   const [codeExpanded, setCodeExpanded] = useState(false);
@@ -324,30 +325,49 @@ export function RichTextEditor({
     editor.chain().focus().setImage({ src: data.url }).run();
   };
 
+  const uploadImage = async (file: File): Promise<string | null> => {
+    const formData = new FormData();
+    formData.append("file", file);
+    const res = await fetch("/api/admin/upload", { method: "POST", body: formData });
+    const data = await res.json();
+    if (!res.ok) {
+      window.alert(data.error ?? "Image upload failed.");
+      return null;
+    }
+    return typeof data.url === "string" ? data.url : null;
+  };
+
+  const handleComparisonFiles = async (files: FileList | null) => {
+    const selectedFiles = files ? Array.from(files).slice(0, 2) : [];
+    if (selectedFiles.length !== 2) {
+      window.alert("Select two images: the before image first, then the after image.");
+      return;
+    }
+    const beforeUrl = await uploadImage(selectedFiles[0]);
+    const afterUrl = await uploadImage(selectedFiles[1]);
+    if (!beforeUrl || !afterUrl) return;
+
+    const comparisonCode = `function BeforeAfterComparison() {
+  const [position, setPosition] = useState(50);
+  return (
+    <div style={{ position: "relative", width: "100%", aspectRatio: "16 / 9", overflow: "hidden", background: "#11161F" }}>
+      <img src={${JSON.stringify(afterUrl)}} alt="After" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+      <img src={${JSON.stringify(beforeUrl)}} alt="Before" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", display: "block", clipPath: "inset(0 " + (100 - position) + "% 0 0)" }} />
+      <span style={{ position: "absolute", top: "12px", left: "12px", padding: "6px 8px", background: "#11161F", color: "#FFF", fontSize: "11px", fontWeight: 700 }}>BEFORE</span>
+      <span style={{ position: "absolute", top: "12px", right: "12px", padding: "6px 8px", background: "#FF8A66", color: "#11161F", fontSize: "11px", fontWeight: 700 }}>AFTER</span>
+      <input aria-label="Compare before and after images" type="range" min="0" max="100" value={position} onChange={(event) => setPosition(Number(event.target.value))} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", opacity: 0, cursor: "ew-resize" }} />
+      <span aria-hidden="true" style={{ position: "absolute", top: "50%", left: "calc(" + position + "% - 18px)", width: "36px", height: "36px", borderRadius: "50%", background: "#FF8A66", color: "#11161F", display: "grid", placeItems: "center", fontWeight: 700, pointerEvents: "none" }}>↔</span>
+    </div>
+  );
+}
+render(<BeforeAfterComparison />);`;
+
+    editor.chain().focus().setCodeBlock().updateAttributes("codeBlock", { interactive: true }).insertContent(comparisonCode).run();
+  };
+
   return (
     <div className={styles.wrapper}>
       <div className={styles.toolbar}>
-        <button
-          type="button"
-          className={`${styles.toolbarButton} ${
-            state.bold ? styles.toolbarButtonActive : ""
-          }`}
-          onClick={() => editor.chain().focus().toggleBold().run()}
-          aria-label="Bold"
-        >
-          B
-        </button>
-        <button
-          type="button"
-          className={`${styles.toolbarButton} ${
-            state.italic ? styles.toolbarButtonActive : ""
-          }`}
-          onClick={() => editor.chain().focus().toggleItalic().run()}
-          aria-label="Italic"
-        >
-          <em>I</em>
-        </button>
-        <span className={styles.toolbarDivider} />
         <div className={styles.toolbarSelectWrap} ref={typeStyleRef}>
           <button
             type="button"
@@ -359,15 +379,15 @@ export function RichTextEditor({
             title="Text style"
           >
             {state.blockType === "paragraph"
-              ? "P"
+              ? "Paragraph"
               : state.blockType === "quote"
-                ? "Q"
+                ? "Quote"
               : state.blockType === "code"
-                  ? "</>"
+                  ? "Code"
                   : state.blockType === "live"
-                    ? "⚡"
+                    ? "Live code"
                   : state.blockType === "eyebrow"
-                    ? "E"
+                    ? "Eyebrow"
                   : state.blockType.toUpperCase()}
           </button>
         {typeStyleOpen && (
@@ -401,6 +421,27 @@ export function RichTextEditor({
             </div>
           )}
         </div>
+        <span className={styles.toolbarDivider} />
+        <button
+          type="button"
+          className={`${styles.toolbarButton} ${
+            state.bold ? styles.toolbarButtonActive : ""
+          }`}
+          onClick={() => editor.chain().focus().toggleBold().run()}
+          aria-label="Bold"
+        >
+          B
+        </button>
+        <button
+          type="button"
+          className={`${styles.toolbarButton} ${
+            state.italic ? styles.toolbarButtonActive : ""
+          }`}
+          onClick={() => editor.chain().focus().toggleItalic().run()}
+          aria-label="Italic"
+        >
+          <em>I</em>
+        </button>
         {state.codeBlock && (
           <button
             type="button"
@@ -487,6 +528,26 @@ export function RichTextEditor({
             const file = e.target.files?.[0];
             if (file) handleImageFile(file);
             e.target.value = "";
+          }}
+          />
+        <button
+          type="button"
+          className={styles.toolbarButton}
+          onClick={() => comparisonInputRef.current?.click()}
+          aria-label="Insert before and after comparison"
+          title="Insert a comparison frame and upload before and after images"
+        >
+          Compare
+        </button>
+        <input
+          ref={comparisonInputRef}
+          type="file"
+          accept="image/*"
+          multiple
+          hidden
+          onChange={(event) => {
+            void handleComparisonFiles(event.target.files);
+            event.target.value = "";
           }}
         />
       </div>

@@ -2,9 +2,47 @@
   width: 100%;
   box-sizing: border-box;
   margin: 0;
-  padding: 0;
+  padding: var(--space-500);
   background: transparent;
   min-height: 0;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 36px;
+  padding: 0 var(--space-200);
+  border: 1px solid var(--border-field);
+  border-bottom: 0;
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  background: var(--bg-surface);
+}
+
+.language {
+  color: var(--text-secondary);
+  font: 12px/1 var(--font-family-mono);
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-100);
+}
+
+.copyButton {
+  padding: 6px 8px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-secondary);
+  font: 600 12px/1 var(--font-family-body);
+}
+
+.copyButton:hover,
+.copyButton:focus-visible {
+  background: var(--bg-subtle);
+  color: var(--text-primary);
 }
 
 .error {
@@ -15,5 +53,41 @@
   color: var(--border-error);
   font-family: var(--font-family-mono);
   font-size: 13px;
+  white-space: pre-wrap;
+}
+
+.switcher {
+  display: flex;
+  gap: 2px;
+  margin: 0;
+  padding: 2px;
+  width: fit-content;
+  border-radius: var(--radius-sm);
+  background: var(--bg-subtle);
+}
+
+.switcher button {
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font: 600 12px/1 var(--font-family-body);
+}
+
+.switcher button:hover,
+.switcher button:focus-visible,
+.switcherActive {
+  background: var(--bg-field);
+  color: var(--text-primary);
+}
+
+.code {
+  margin: 0;
+  padding: var(--space-300);
+  overflow-x: auto;
+  border: 1px solid var(--border-field);
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+  background: var(--bg-subtle);
+  color: var(--text-primary);
+  font: 13px/1.55 var(--font-family-mono);
   white-space: pre-wrap;
 }
