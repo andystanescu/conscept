@@ -6,6 +6,7 @@ import StarterKit from "@tiptap/starter-kit";
 import Blockquote from "@tiptap/extension-blockquote";
 import Paragraph from "@tiptap/extension-paragraph";
 import Image from "@tiptap/extension-image";
+import Link from "@tiptap/extension-link";
 import Placeholder from "@tiptap/extension-placeholder";
 import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight";
 import { createLowlight, common } from "lowlight";
@@ -30,6 +31,12 @@ const InteractiveCodeBlock = CodeBlockLowlight.extend({
           element.getAttribute("data-interactive") === "true",
         renderHTML: (attributes: { interactive?: boolean }) =>
           attributes.interactive ? { "data-interactive": "true" } : {},
+      },
+      chrome: {
+        default: "framed",
+        parseHTML: (element: HTMLElement) => element.getAttribute("data-chrome") || "framed",
+        renderHTML: (attributes: { chrome?: string }) =>
+          attributes.chrome === "minimal" ? { "data-chrome": "minimal" } : {},
       },
     };
   },
@@ -157,6 +164,25 @@ type RichTextEditorProps = {
 
 type BlockType = "paragraph" | "eyebrow" | "h1" | "h2" | "h3" | "quote" | "code" | "live";
 
+type ToolbarIconName =
+  | "bold"
+  | "italic"
+  | "link"
+  | "bulleted-list"
+  | "ordered-list"
+  | "image"
+  | "code"
+  | "more"
+  | "chevron-down";
+
+function ToolbarIcon({ name }: { name: ToolbarIconName }) {
+  return (
+    <svg className={styles.toolbarIcon} aria-hidden="true" viewBox="0 0 24 24">
+      <use href={`/assets/editor-toolbar-icons.svg#${name}`} />
+    </svg>
+  );
+}
+
 function readToolbarState(editor: Editor | null) {
   const selectedNode = editor?.state.selection.$from.parent;
   let hasLiveCode = false;
@@ -173,6 +199,7 @@ function readToolbarState(editor: Editor | null) {
     orderedList: editor?.isActive("orderedList") ?? false,
     codeBlock: editor?.isActive("codeBlock") ?? false,
     interactive: editor?.isActive("codeBlock", { interactive: true }) ?? false,
+    chrome: (editor?.getAttributes("codeBlock").chrome as "framed" | "minimal" | undefined) ?? "framed",
     blockType: (editor?.isActive("codeBlock", { interactive: true })
       ? "live"
       : editor?.isActive("paragraph", { className: "label-eyebrow" })
@@ -202,10 +229,17 @@ export function RichTextEditor({
 }: RichTextEditorProps) {
   const hiddenInputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const comparisonInputRef = useRef<HTMLInputElement>(null);
+  const comparisonBeforeInputRef = useRef<HTMLInputElement>(null);
+  const comparisonAfterInputRef = useRef<HTMLInputElement>(null);
+  const toolbarRef = useRef<HTMLDivElement>(null);
   const typeStyleRef = useRef<HTMLDivElement>(null);
   const [typeStyleOpen, setTypeStyleOpen] = useState(false);
   const [codeExpanded, setCodeExpanded] = useState(false);
+  const [insertMenuOpen, setInsertMenuOpen] = useState(false);
+  const [toolbarOverflowed, setToolbarOverflowed] = useState(false);
+  const [comparisonOpen, setComparisonOpen] = useState(false);
+  const [comparisonBefore, setComparisonBefore] = useState<{ file: File; preview: string } | null>(null);
+  const [comparisonAfter, setComparisonAfter] = useState<{ file: File; preview: string } | null>(null);
 
   const editor = useEditor({
     immediatelyRender: false,
@@ -217,6 +251,7 @@ export function RichTextEditor({
         paragraph: false,
       }),
       StyledParagraph,
+      Link.configure({ openOnClick: false }),
       AttributedBlockquote,
       InteractiveCodeBlock.configure({ lowlight }),
       ResizableImage,
@@ -262,6 +297,26 @@ export function RichTextEditor({
     document.addEventListener("mousedown", closeOnOutsideClick);
     return () => document.removeEventListener("mousedown", closeOnOutsideClick);
   }, [typeStyleOpen]);
+
+  useEffect(() => {
+    const toolbar = toolbarRef.current;
+    if (!toolbar) return;
+
+    const updateOverflow = () => {
+      // Keep every control visible while it fits. The optional insert actions
+      // are moved into the menu only after the toolbar itself overflows.
+      const wasOverflowed = toolbar.classList.contains(styles.toolbarOverflowed);
+      if (wasOverflowed) toolbar.classList.remove(styles.toolbarOverflowed);
+      const isOverflowed = toolbar.scrollWidth > toolbar.clientWidth + 1;
+      if (wasOverflowed) toolbar.classList.add(styles.toolbarOverflowed);
+      setToolbarOverflowed(isOverflowed);
+    };
+
+    updateOverflow();
+    const observer = new ResizeObserver(updateOverflow);
+    observer.observe(toolbar);
+    return () => observer.disconnect();
+  }, [editor, toolbarOverflowed]);
 
   if (!editor) {
     return (
@@ -337,14 +392,17 @@ export function RichTextEditor({
     return typeof data.url === "string" ? data.url : null;
   };
 
-  const handleComparisonFiles = async (files: FileList | null) => {
-    const selectedFiles = files ? Array.from(files).slice(0, 2) : [];
-    if (selectedFiles.length !== 2) {
-      window.alert("Select two images: the before image first, then the after image.");
-      return;
-    }
-    const beforeUrl = await uploadImage(selectedFiles[0]);
-    const afterUrl = await uploadImage(selectedFiles[1]);
+  const chooseComparisonImage = (kind: "before" | "after", file: File | undefined) => {
+    if (!file) return;
+    const image = { file, preview: URL.createObjectURL(file) };
+    if (kind === "before") setComparisonBefore(image);
+    else setComparisonAfter(image);
+  };
+
+  const handleComparisonInsert = async () => {
+    if (!comparisonBefore || !comparisonAfter) return;
+    const beforeUrl = await uploadImage(comparisonBefore.file);
+    const afterUrl = await uploadImage(comparisonAfter.file);
     if (!beforeUrl || !afterUrl) return;
 
     const comparisonCode = `function BeforeAfterComparison() {
@@ -363,11 +421,22 @@ export function RichTextEditor({
 render(<BeforeAfterComparison />);`;
 
     editor.chain().focus().setCodeBlock().updateAttributes("codeBlock", { interactive: true }).insertContent(comparisonCode).run();
+    setComparisonOpen(false);
+    setComparisonBefore(null);
+    setComparisonAfter(null);
+  };
+
+  const handleLink = () => {
+    const href = window.prompt("Enter a URL", editor.getAttributes("link").href || "https://");
+    if (href) editor.chain().focus().setLink({ href }).run();
   };
 
   return (
     <div className={styles.wrapper}>
-      <div className={styles.toolbar}>
+      <div
+        ref={toolbarRef}
+        className={`${styles.toolbar} ${toolbarOverflowed ? styles.toolbarOverflowed : ""}`}
+      >
         <div className={styles.toolbarSelectWrap} ref={typeStyleRef}>
           <button
             type="button"
@@ -378,7 +447,7 @@ render(<BeforeAfterComparison />);`;
             aria-haspopup="listbox"
             title="Text style"
           >
-            {state.blockType === "paragraph"
+            <span>{state.blockType === "paragraph"
               ? "Paragraph"
               : state.blockType === "quote"
                 ? "Quote"
@@ -388,19 +457,18 @@ render(<BeforeAfterComparison />);`;
                     ? "Live code"
                   : state.blockType === "eyebrow"
                     ? "Eyebrow"
-                  : state.blockType.toUpperCase()}
+                  : state.blockType.toUpperCase()}</span>
+            <ToolbarIcon name="chevron-down" />
           </button>
         {typeStyleOpen && (
             <div className={styles.toolbarMenu} role="listbox" aria-label="Text style options">
               {([
-                ["paragraph", "Paragraph"],
-                ["eyebrow", "Eyebrow"],
                 ["h1", "Heading 1"],
                 ["h2", "Heading 2"],
                 ["h3", "Heading 3"],
+                ["paragraph", "Paragraph"],
                 ["quote", "Quote"],
                 ["code", "Code"],
-                ["live", "Live code"],
               ] as [BlockType, string][]).map(([value, label]) => (
                 <button
                   key={value}
@@ -430,7 +498,7 @@ render(<BeforeAfterComparison />);`;
           onClick={() => editor.chain().focus().toggleBold().run()}
           aria-label="Bold"
         >
-          B
+          <ToolbarIcon name="bold" />
         </button>
         <button
           type="button"
@@ -440,27 +508,9 @@ render(<BeforeAfterComparison />);`;
           onClick={() => editor.chain().focus().toggleItalic().run()}
           aria-label="Italic"
         >
-          <em>I</em>
+          <ToolbarIcon name="italic" />
         </button>
-        {state.codeBlock && (
-          <button
-            type="button"
-            className={`${styles.toolbarButton} ${
-              state.interactive ? styles.toolbarButtonActive : ""
-            }`}
-            onClick={() =>
-              editor
-                .chain()
-                .focus()
-                .updateAttributes("codeBlock", { interactive: !state.interactive })
-                .run()
-            }
-            aria-label="Render as live React component"
-            title="Render as a live, running React component on the page instead of highlighted text"
-          >
-            ⚡ Live
-          </button>
-        )}
+        <button type="button" className={styles.toolbarButton} onClick={handleLink} aria-label="Add link" title="Add link"><ToolbarIcon name="link" /></button>
         {state.blockType === "quote" && (
           <input
             className={styles.attributionInput}
@@ -486,7 +536,7 @@ render(<BeforeAfterComparison />);`;
           }}
           aria-label="Bullet list"
         >
-          •—
+          <ToolbarIcon name="bulleted-list" />
         </button>
         <button
           type="button"
@@ -500,15 +550,16 @@ render(<BeforeAfterComparison />);`;
           }}
           aria-label="Numbered list"
         >
-          1.
+          <ToolbarIcon name="ordered-list" />
         </button>
         <button
           type="button"
           className={styles.toolbarButton}
-          onClick={() => editor.chain().focus().setHorizontalRule().run()}
-          aria-label="Separator line"
+          onClick={() => editor.chain().focus().setCodeBlock().run()}
+          aria-label="Insert code block"
+          title="Insert code block"
         >
-          —
+          <ToolbarIcon name="code" />
         </button>
         <span className={styles.toolbarDivider} />
         <button
@@ -517,7 +568,7 @@ render(<BeforeAfterComparison />);`;
           onClick={() => fileInputRef.current?.click()}
           aria-label="Insert image"
         >
-          Image
+          <ToolbarIcon name="image" />
         </button>
         <input
           ref={fileInputRef}
@@ -532,25 +583,79 @@ render(<BeforeAfterComparison />);`;
           />
         <button
           type="button"
-          className={styles.toolbarButton}
-          onClick={() => comparisonInputRef.current?.click()}
+          className={`${styles.toolbarButton} ${styles.overflowable}`}
+          onClick={() => { setComparisonOpen(true); setInsertMenuOpen(false); }}
           aria-label="Insert before and after comparison"
-          title="Insert a comparison frame and upload before and after images"
+          title="Insert comparison"
         >
           Compare
         </button>
-        <input
-          ref={comparisonInputRef}
-          type="file"
-          accept="image/*"
-          multiple
-          hidden
-          onChange={(event) => {
-            void handleComparisonFiles(event.target.files);
-            event.target.value = "";
-          }}
-        />
+        <button
+          type="button"
+          className={`${styles.toolbarButton} ${styles.overflowable}`}
+          onClick={() => editor.chain().focus().setHorizontalRule().run()}
+          aria-label="Insert separator"
+          title="Insert separator"
+        >
+          Separator
+        </button>
+        {toolbarOverflowed && (
+          <button
+            type="button"
+            className={styles.toolbarButton}
+            onClick={() => setInsertMenuOpen((open) => !open)}
+            aria-label="More insert options"
+            aria-expanded={insertMenuOpen}
+            aria-haspopup="menu"
+          >
+            <ToolbarIcon name="more" />
+          </button>
+        )}
+        {toolbarOverflowed && insertMenuOpen && <div className={styles.insertMenu} role="menu">
+          <button type="button" role="menuitem" onClick={() => { setInsertMenuOpen(false); setComparisonOpen(true); }}>Comparison</button>
+          <button type="button" role="menuitem" onClick={() => { setInsertMenuOpen(false); editor.chain().focus().setHorizontalRule().run(); }}>Separator</button>
+        </div>}
       </div>
+      {comparisonOpen && (
+        <div className={styles.comparisonWidget} role="dialog" aria-label="Create before and after comparison">
+          <div className={styles.comparisonWidgetHeader}>
+            <div>
+              <p className={styles.comparisonWidgetEyebrow}>COMPARISON</p>
+              <p className={styles.comparisonWidgetTitle}>Add a before and after frame</p>
+            </div>
+            <button type="button" className={styles.comparisonClose} onClick={() => setComparisonOpen(false)} aria-label="Close comparison setup">×</button>
+          </div>
+          <p className={styles.comparisonWidgetHint}>Upload each image into its named position so the slider uses the correct order.</p>
+          <div className={styles.comparisonSlots}>
+            {(["before", "after"] as const).map((kind) => {
+              const selected = kind === "before" ? comparisonBefore : comparisonAfter;
+              return (
+                <div className={styles.comparisonSlot} key={kind}>
+                  <p className={styles.comparisonSlotLabel}>{kind === "before" ? "Before image" : "After image"}</p>
+                  <button type="button" className={styles.comparisonUpload} onClick={() => (kind === "before" ? comparisonBeforeInputRef : comparisonAfterInputRef).current?.click()}>
+                    {selected ? <img src={selected.preview} alt={`${kind} preview`} /> : <span>Choose image</span>}
+                  </button>
+                  <input
+                    ref={kind === "before" ? comparisonBeforeInputRef : comparisonAfterInputRef}
+                    type="file"
+                    accept="image/*"
+                    hidden
+                    onChange={(event) => {
+                      chooseComparisonImage(kind, event.target.files?.[0]);
+                      event.target.value = "";
+                    }}
+                  />
+                  <span className={styles.comparisonSlotAction}>{selected ? "Replace image" : "Upload image"}</span>
+                </div>
+              );
+            })}
+          </div>
+          <div className={styles.comparisonWidgetActions}>
+            <button type="button" className={styles.comparisonCancel} onClick={() => setComparisonOpen(false)}>Cancel</button>
+            <button type="button" className={styles.comparisonInsert} disabled={!comparisonBefore || !comparisonAfter} onClick={() => void handleComparisonInsert()}>Insert comparison</button>
+          </div>
+        </div>
+      )}
       <div className={state.hasLiveCode && !codeExpanded ? styles.collapsedLiveCode : undefined}>
         <EditorContent editor={editor} />
       </div>
