@@ -1,5 +1,5 @@
 import { DatabaseSync } from "node:sqlite";
-import { existsSync, mkdirSync } from "fs";
+import { existsSync, mkdirSync, readFileSync } from "fs";
 import { join } from "path";
 
 // Node's built-in SQLite (available since Node 22.5, no native compile step
@@ -244,6 +244,84 @@ const DEFAULT_SETTINGS: Record<string, string> = {
   contact_email_to: "",
   logo_image: "",
 };
+
+// A content-only baseline can be committed as data/content-seed.json. This
+// runs before the built-in demo seed and only fills an empty content table;
+// it never overwrites content already created or edited in that deployment.
+// The file is intentionally separate from the SQLite database so credentials,
+// sessions and contact submissions cannot be carried into production.
+type SeedRecord = Record<string, unknown>;
+type SeedPayload = { format?: string; version?: number; caseStudies?: SeedRecord[]; insights?: SeedRecord[] };
+
+function seedContentBaseline() {
+  const seedPath = join(process.cwd(), "data", "content-seed.json");
+  if (!existsSync(seedPath)) return;
+
+  let payload: SeedPayload;
+  try {
+    payload = JSON.parse(readFileSync(seedPath, "utf8")) as SeedPayload;
+  } catch (error) {
+    console.warn("Could not read data/content-seed.json; continuing without content baseline.", error);
+    return;
+  }
+  if (payload.format !== "conscept-content" || payload.version !== 1) return;
+
+  const asText = (record: SeedRecord, key: string, fallback = "") =>
+    typeof record[key] === "string" ? record[key] as string : fallback;
+  const asNumber = (record: SeedRecord, key: string, fallback = 0) =>
+    typeof record[key] === "number" ? Math.round(record[key] as number) : fallback;
+  const asJson = (record: SeedRecord, key: string, fallback: unknown) =>
+    Array.isArray(record[key]) || (record[key] && typeof record[key] === "object")
+      ? JSON.stringify(record[key])
+      : typeof record[key] === "string" ? record[key] : JSON.stringify(fallback);
+
+  const caseStudyCount = db.prepare("SELECT COUNT(*) AS n FROM case_studies").get() as { n: number };
+  if (caseStudyCount.n === 0 && Array.isArray(payload.caseStudies)) {
+    const insert = db.prepare(
+      `INSERT INTO case_studies
+        (slug, eyebrow, title, description, tags, position, published, body,
+         cover_image, thumbnail_image, category, year, outcome_eyebrow,
+         outcome_title, metrics, assessment, password_required, password_hashes)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    );
+    for (const record of payload.caseStudies) {
+      const slug = asText(record, "slug").trim();
+      const title = asText(record, "title").trim();
+      if (!slug || !title) continue;
+      insert.run(
+        slug, asText(record, "eyebrow"), title, asText(record, "description"),
+        asText(record, "tags"), asNumber(record, "position"), asNumber(record, "published", 1),
+        asText(record, "body"), asText(record, "cover_image"), asText(record, "thumbnail_image"),
+        asText(record, "category"), asText(record, "year"), asText(record, "outcome_eyebrow", "OUTCOMES"),
+        asText(record, "outcome_title"), asJson(record, "metrics", []), asJson(record, "assessment", {}),
+        asNumber(record, "password_required"), asJson(record, "password_hashes", [])
+      );
+    }
+  }
+
+  const insightCount = db.prepare("SELECT COUNT(*) AS n FROM insights").get() as { n: number };
+  if (insightCount.n === 0 && Array.isArray(payload.insights)) {
+    const insert = db.prepare(
+      `INSERT INTO insights
+        (slug, title, excerpt, body, published_at, position, published,
+         cover_image, thumbnail_image, category, author, tags)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    );
+    for (const record of payload.insights) {
+      const slug = asText(record, "slug").trim();
+      const title = asText(record, "title").trim();
+      if (!slug || !title) continue;
+      insert.run(
+        slug, title, asText(record, "excerpt"), asText(record, "body"),
+        asText(record, "published_at"), asNumber(record, "position"), asNumber(record, "published", 1),
+        asText(record, "cover_image"), asText(record, "thumbnail_image"), asText(record, "category"),
+        asText(record, "author", "Andrei Stanescu"), asText(record, "tags")
+      );
+    }
+  }
+}
+
+seedContentBaseline();
 
 const getSettingStmt = db.prepare("SELECT value FROM settings WHERE key = ?");
 const insertSettingStmt = db.prepare(
