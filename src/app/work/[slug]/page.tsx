@@ -32,7 +32,8 @@ export default async function CaseStudyDetailPage({ params, searchParams }: { pa
   const study = getCaseStudyBySlug(slug);
   if (!study) notFound();
   const authorName = getSettings().author_name;
-  const publishedAt = typeof study.published_at === "string" && study.published_at ? displayDate(study.published_at) : "";
+  const rawPublishedAt = "published_at" in study && typeof study.published_at === "string" ? study.published_at : "";
+  const publishedAt = rawPublishedAt ? displayDate(rawPublishedAt) : "";
   const metadata = [study.category, study.year, authorName, publishedAt].filter(Boolean).join("  ·  ");
   let passwordHashes: string[] = [];
   try { const parsed = JSON.parse(study.password_hashes || "[]"); passwordHashes = Array.isArray(parsed) ? parsed.map((value) => typeof value === "string" ? value : value && typeof value === "object" && typeof value.hash === "string" ? value.hash : null).filter((value): value is string => Boolean(value)) : []; } catch { passwordHashes = []; }
