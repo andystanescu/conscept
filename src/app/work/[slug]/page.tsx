@@ -31,7 +31,7 @@ export default async function CaseStudyDetailPage({ params, searchParams }: { pa
   const { slug } = await params;
   const study = getCaseStudyBySlug(slug);
   if (!study) notFound();
-  const authorName = study.author || getSettings().author_name;
+  const authorName = getSettings().author_name;
   let passwordHashes: string[] = [];
   try { const parsed = JSON.parse(study.password_hashes || "[]"); passwordHashes = Array.isArray(parsed) ? parsed.map((value) => typeof value === "string" ? value : value && typeof value === "object" && typeof value.hash === "string" ? value.hash : null).filter((value): value is string => Boolean(value)) : []; } catch { passwordHashes = []; }
   const cookieStore = await cookies();
