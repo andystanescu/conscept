@@ -32,6 +32,8 @@ export default async function CaseStudyDetailPage({ params, searchParams }: { pa
   const study = getCaseStudyBySlug(slug);
   if (!study) notFound();
   const authorName = getSettings().author_name;
+  const publishedAt = typeof study.published_at === "string" && study.published_at ? displayDate(study.published_at) : "";
+  const metadata = [study.category, study.year, authorName, publishedAt].filter(Boolean).join("  ·  ");
   let passwordHashes: string[] = [];
   try { const parsed = JSON.parse(study.password_hashes || "[]"); passwordHashes = Array.isArray(parsed) ? parsed.map((value) => typeof value === "string" ? value : value && typeof value === "object" && typeof value.hash === "string" ? value.hash : null).filter((value): value is string => Boolean(value)) : []; } catch { passwordHashes = []; }
   const cookieStore = await cookies();
@@ -79,7 +81,7 @@ export default async function CaseStudyDetailPage({ params, searchParams }: { pa
           <p className="label-eyebrow" style={{ color: "var(--text-accent)" }}>{study.category || study.eyebrow || "CASE STUDY"}</p>
           <h1 className="display-small">{study.title}</h1>
           <p className="body-large" style={{ color: "var(--text-secondary)" }}>{study.description}</p>
-          {(study.category || study.year || authorName || study.published_at) && <p className={styles.meta}>{study.category}{study.category && study.year ? "  ·  " : ""}{study.year}{(study.category || study.year) && authorName ? "  ·  " : ""}{authorName}{study.published_at ? `  ·  ${displayDate(study.published_at)}` : ""}</p>}
+          {metadata && <p className={styles.meta}>{metadata}</p>}
         </div>
         {study.cover_image && <div className={styles.heroImage}><img src={study.cover_image} alt="" /></div>}
       </section>
