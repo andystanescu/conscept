@@ -386,6 +386,38 @@
   border-radius: var(--radius-md);
 }
 
+.content:global(.ProseMirror) :global([data-resizable-image]) {
+  position: relative;
+  display: inline-block;
+  max-width: 100%;
+  line-height: 0;
+}
+
+.content:global(.ProseMirror) :global([data-resizable-image] img) {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+.imageResizeHandle {
+  position: absolute;
+  right: -5px;
+  bottom: -5px;
+  width: 14px;
+  height: 14px;
+  padding: 0;
+  border: 2px solid var(--bg-field);
+  border-radius: 50%;
+  background: var(--accent-foundation);
+  box-shadow: 0 0 0 1px var(--accent-foundation);
+  cursor: nwse-resize;
+}
+
+.imageResizeHandle:focus-visible {
+  outline: 2px solid var(--text-primary);
+  outline-offset: 2px;
+}
+
 .content:global(.ProseMirror) p.is-editor-empty:first-child::before {
   float: left;
   height: 0;

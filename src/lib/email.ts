@@ -43,3 +43,22 @@ export async function sendContactNotification(input: {
     };
   }
 }
+
+export async function sendAdminRecoveryEmail(input: { to: string; resetUrl: string }) {
+  const from = process.env.CONTACT_EMAIL_FROM;
+  if (!from) return { ok: false as const, error: "CONTACT_EMAIL_FROM is not set." };
+
+  try {
+    const resend = getClient();
+    const { error } = await resend.emails.send({
+      from,
+      to: input.to,
+      subject: "Reset your ConScept admin access",
+      text: `A request was made to reset your ConScept admin credentials.\n\nUse this one-time link within 15 minutes:\n${input.resetUrl}\n\nIf you did not make this request, you can ignore this email.`,
+    });
+    if (error) return { ok: false as const, error: error.message };
+    return { ok: true as const };
+  } catch (err) {
+    return { ok: false as const, error: err instanceof Error ? err.message : String(err) };
+  }
+}

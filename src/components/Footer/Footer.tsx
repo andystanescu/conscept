@@ -5,6 +5,7 @@ import { AdminBar } from "@/components/AdminBar/AdminBar";
 import { FooterLink } from "./FooterLink";
 import { getServiceItems } from "@/lib/serviceItems";
 import { getSettings } from "@/lib/settings";
+import { getPublishedPage } from "@/lib/pages";
 import styles from "./Footer.module.css";
 
 const COMPANY_LINKS = [
@@ -19,6 +20,8 @@ export function Footer() {
   const settings = getSettings();
   const services = getServiceItems();
   const copyrightName = settings.logo_identity === "personal" ? "Andrei Stanescu" : "ConScept";
+  const privacyPage = getPublishedPage("privacy");
+  const termsPage = getPublishedPage("terms");
 
   return (
     <>
@@ -81,12 +84,8 @@ export function Footer() {
             © {copyrightName} 2026
           </p>
           <div className={styles.legal}>
-            <FooterLink href="/privacy" className="body-small" style={{ color: "var(--text-tertiary)" }}>
-              Privacy
-            </FooterLink>
-            <FooterLink href="/terms" className="body-small" style={{ color: "var(--text-tertiary)" }}>
-              Terms
-            </FooterLink>
+            {privacyPage && <FooterLink href="/privacy" className="body-small" style={{ color: "var(--text-tertiary)" }}>Privacy</FooterLink>}
+            {termsPage && <FooterLink href="/terms" className="body-small" style={{ color: "var(--text-tertiary)" }}>Terms</FooterLink>}
           </div>
         </div>
         </div>

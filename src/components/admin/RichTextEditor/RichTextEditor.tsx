@@ -61,6 +61,93 @@ const StyledParagraph = Paragraph.extend({
   },
 });
 
+// Images remain ordinary HTML images when the editor is saved, but in the
+// editor they get a small native corner handle for manual resizing.
+const ResizableImage = Image.extend({
+  addAttributes() {
+    return {
+      ...this.parent?.(),
+      width: {
+        default: null,
+        parseHTML: (element: HTMLElement) => element.getAttribute("width") || null,
+        renderHTML: (attributes: { width?: string | null }) =>
+          attributes.width ? { width: attributes.width } : {},
+      },
+    };
+  },
+  addNodeView() {
+    return ({ node, editor, getPos }) => {
+      const wrapper = document.createElement("span");
+      const image = document.createElement("img");
+      const handle = document.createElement("button");
+      const attrs = node.attrs as { src: string; alt?: string; title?: string; width?: string | null };
+
+      wrapper.className = styles.resizableImage;
+      wrapper.setAttribute("data-resizable-image", "true");
+      image.src = attrs.src;
+      image.alt = attrs.alt || "";
+      if (attrs.title) image.title = attrs.title;
+      if (attrs.width) image.width = Number(attrs.width);
+      handle.type = "button";
+      handle.className = styles.imageResizeHandle;
+      handle.setAttribute("aria-label", "Resize image");
+      handle.title = "Drag to resize image";
+      wrapper.append(image, handle);
+
+      const updateWidth = (width: number) => {
+        const pos = typeof getPos === "function" ? getPos() : null;
+        if (pos == null) return;
+        editor.view.dispatch(
+          editor.state.tr.setNodeMarkup(pos, undefined, {
+            ...node.attrs,
+            width: String(Math.round(width)),
+          })
+        );
+      };
+
+      const startResize = (event: PointerEvent) => {
+        event.preventDefault();
+        event.stopPropagation();
+        const startX = event.clientX;
+        const startWidth = image.getBoundingClientRect().width;
+        const maxWidth = editor.view.dom.clientWidth || startWidth;
+        handle.setPointerCapture?.(event.pointerId);
+
+        const move = (moveEvent: PointerEvent) => {
+          const nextWidth = Math.max(120, Math.min(maxWidth, startWidth + moveEvent.clientX - startX));
+          wrapper.style.width = `${nextWidth}px`;
+        };
+        const finish = () => {
+          const width = image.getBoundingClientRect().width;
+          updateWidth(width);
+          wrapper.style.width = "";
+          window.removeEventListener("pointermove", move);
+          window.removeEventListener("pointerup", finish);
+          window.removeEventListener("pointercancel", finish);
+        };
+        window.addEventListener("pointermove", move);
+        window.addEventListener("pointerup", finish, { once: true });
+        window.addEventListener("pointercancel", finish, { once: true });
+      };
+
+      handle.addEventListener("pointerdown", startResize);
+      return {
+        dom: wrapper,
+        stopEvent: (event: Event) => event.target === handle || handle.contains(event.target as Node),
+        update: (updatedNode: typeof node) => {
+          if (updatedNode.type !== node.type) return false;
+          image.src = updatedNode.attrs.src;
+          image.alt = updatedNode.attrs.alt || "";
+          if (updatedNode.attrs.width) image.width = Number(updatedNode.attrs.width);
+          else image.removeAttribute("width");
+          return true;
+        },
+        destroy: () => handle.removeEventListener("pointerdown", startResize),
+      };
+    };
+  },
+});
+
 type RichTextEditorProps = {
   name: string;
   defaultValue?: string;
@@ -131,7 +218,7 @@ export function RichTextEditor({
       StyledParagraph,
       AttributedBlockquote,
       InteractiveCodeBlock.configure({ lowlight }),
-      Image,
+      ResizableImage,
       Placeholder.configure({ placeholder }),
       AccentMark,
     ],
