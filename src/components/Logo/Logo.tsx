@@ -9,7 +9,8 @@ type LogoProps = {
 };
 
 const SIZES = {
-  compact: { icon: 34.759, text: 27.31 },
+  // Matches the Figma compact lockup: 28px mark, 22px wordmark.
+  compact: { icon: 28, text: 22 },
   primary: { icon: 44, text: 36 },
 };
 
@@ -19,14 +20,15 @@ export function Logo({ variant = "compact", theme = "default", identity = "busin
 
   if (identity === "personal") {
     return (
-      theme === "inverted" ? (
-        <img className={styles.fullLogo} src="/assets/logo-footer.svg" alt="AndreiStanescu" height={icon} />
-      ) : (
-        <span className={`${styles.logo} ${styles.personal}`}>
-          <img src="/assets/logo-icon-personal-nav.svg" alt="" width={icon} height={icon} />
-          <span className={styles.wordmark} style={{ fontSize: text, letterSpacing: -text * 0.02 }}>AndreiStanescu</span>
-        </span>
-      )
+      <span className={`${styles.logo} ${styles.personal}`}>
+        <img
+          src={theme === "inverted" ? "/assets/logo-icon-personal-footer.svg" : "/assets/logo-icon-personal.svg"}
+          alt=""
+          width={icon}
+          height={icon}
+        />
+        <span className={styles.wordmark} style={{ fontSize: text, letterSpacing: -text * 0.02 }}>AndreiStanescu</span>
+      </span>
     );
   }
 
