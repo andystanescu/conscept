@@ -18,11 +18,12 @@
   flex-wrap: wrap;
   align-items: center;
   justify-content: flex-start;
-  gap: var(--space-50);
-  padding: var(--space-100);
+  gap: 2px;
+  padding: var(--space-50);
   border: 1px solid var(--border-field);
   border-radius: var(--radius-md) var(--radius-md) 0 0;
-  background: var(--bg-field);
+  background: var(--bg-surface);
+  box-shadow: 0 4px 14px rgba(17, 22, 31, 0.08);
 }
 
 .toolbarButton {
@@ -48,8 +49,8 @@
 }
 
 .toolbarButtonActive {
-  background: var(--accent-foundation);
-  color: #11161f;
+  background: var(--bg-subtle);
+  color: var(--text-accent);
 }
 
 .toolbarDivider {
@@ -70,7 +71,7 @@
   min-width: 104px;
   height: 32px;
   padding: 0 var(--space-100);
-  border: 1px solid var(--border-field);
+  border: 1px solid transparent;
   border-radius: var(--radius-sm);
   background: var(--bg-surface);
   color: var(--text-primary);
