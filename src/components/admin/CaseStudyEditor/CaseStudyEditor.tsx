@@ -19,6 +19,7 @@ type Tab = "details" | "outcomes" | "assessment" | "content" | "visibility";
 export function CaseStudyEditor({ study, metrics, assessment, services, passwordRequired, passwordEntries }: Props) {
   const [tab, setTab] = useState<Tab>("content");
   const studyAuthor = "author" in study && typeof study.author === "string" ? study.author : "";
+  const publishedDate = "published_at" in study && typeof study.published_at === "string" ? study.published_at : "";
   const formRef = useRef<HTMLFormElement>(null);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [saveState, setSaveState] = useState<"saved" | "saving" | "error">("saved");
@@ -74,7 +75,7 @@ export function CaseStudyEditor({ study, metrics, assessment, services, password
         <Field label="Title"><input name="title" defaultValue={study.title} required className={adminStyles.input} /></Field>
         <Field label="Description"><textarea name="description" defaultValue={study.description} required className={adminStyles.textarea} /></Field>
         <Field label="Author (from Settings)"><input defaultValue={studyAuthor} readOnly className={adminStyles.input} /><small className="body-small">The current author name is applied automatically when this case study is saved.</small></Field>
-        <Field label="Published date"><input type="date" name="published_at" defaultValue={dateInputValue(study.published_at)} className={adminStyles.input} /></Field>
+        <Field label="Published date"><input type="date" name="published_at" defaultValue={dateInputValue(publishedDate)} className={adminStyles.input} /></Field>
         <TagEditor initialValue={study.tags} onCommit={scheduleDraftSave} />
         <Field label="Cover image (shown at the top of the case study)"><ImageField name="cover_image" currentUrl={study.cover_image} /></Field>
         <Field label="Thumbnail image (shown on cards and listings)"><ImageField name="thumbnail_image" currentUrl={study.thumbnail_image} /></Field>
