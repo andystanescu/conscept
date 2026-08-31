@@ -1,7 +1,6 @@
 import { relativeRedirect } from "@/lib/relativeRedirect";
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import type { CaseStudy } from "@/data/caseStudies";
 import { resolveImageField } from "@/lib/uploads";
 import { applyHeadingAccents } from "@/lib/headingAccents";
 import { assessmentCriteriaList, getPrimaryComplexityDrivers } from "@/data/caseStudyAssessment";
@@ -58,7 +57,13 @@ export async function POST(
 
   const existing = db
     .prepare("SELECT cover_image, thumbnail_image, published, password_hashes, published_at FROM case_studies WHERE id = ?")
-    .get(id) as Pick<CaseStudy, "cover_image" | "thumbnail_image" | "published" | "password_hashes" | "published_at"> | undefined;
+    .get(id) as {
+      cover_image: string;
+      thumbnail_image: string;
+      published: number;
+      password_hashes: string;
+      published_at: string;
+    } | undefined;
   const published = intent === "publish" ? 1 : Number(existing?.published ?? 0);
 
   const coverImage = await resolveImageField(
