@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 import Link from "next/link";
 import { Nav } from "@/components/Nav/Nav";
 import { Footer } from "@/components/Footer/Footer";
@@ -11,8 +12,16 @@ import { calculateReadingTime } from "@/lib/readingTime";
 import { ShareArticle } from "@/components/ShareArticle/ShareArticle";
 import { BackButton } from "@/components/BackButton/BackButton";
 import styles from "./insight.module.css";
+import { contentMetadata, absoluteUrl } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const insight = getInsightBySlug(slug);
+  if (!insight) return {};
+  return contentMetadata({ title: `${insight.title} | Andrei Stanescu`, description: insight.excerpt, path: `/insights/${encodeURIComponent(insight.slug)}`, image: insight.cover_image });
+}
 
 export default async function InsightDetailPage({
   params,
@@ -32,6 +41,11 @@ export default async function InsightDetailPage({
 
   return (
     <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
+        "@context": "https://schema.org", "@type": "Article", headline: insight.title,
+        description: insight.excerpt, datePublished: insight.published_at, author: { "@type": "Person", name: insight.author },
+        mainEntityOfPage: absoluteUrl(`/insights/${encodeURIComponent(insight.slug)}`), image: insight.cover_image ? absoluteUrl(insight.cover_image) : undefined,
+      }) }} />
       <Nav />
       <main className={styles.main}>
         <section className={styles.hero}>

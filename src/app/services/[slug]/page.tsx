@@ -12,8 +12,17 @@ import { GovernanceScaleGraphic } from "@/components/services/GovernanceScaleGra
 import { CollaborationAlignmentGraphic } from "@/components/services/CollaborationAlignmentGraphic/CollaborationAlignmentGraphic";
 import { getServiceItemBySlug } from "@/lib/serviceItems";
 import styles from "./service-detail.module.css";
+import type { Metadata } from "next";
+import { contentMetadata, absoluteUrl } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const service = getServiceItemBySlug(slug);
+  if (!service) return {};
+  return contentMetadata({ title: `${service.title} | Andrei Stanescu`, description: service.description, path: `/services/${encodeURIComponent(service.slug)}` });
+}
 
 const benefits = [["Consistency at scale", "Unified experiences across products and platforms."], ["Faster delivery", "Reusable building blocks and clear patterns."], ["Better collaboration", "A shared language between design and engineering."], ["Long-term impact", "Systems that evolve with your product."]];
 const aiOperationsBenefits = [["More capacity, safely", "Assistive workflows that preserve a consistent quality bar."], ["Shorter review cycles", "AI-supported preparation and iteration where it genuinely helps."], ["Visible human judgement", "Clear review points keep decisions accountable and explainable."], ["Operations that learn", "Workflows improve as your team gathers evidence and feedback."]];
@@ -72,6 +81,10 @@ export default async function ServiceDetailPage({ params }: { params: Promise<{ 
     audienceLead: "Whether you are launching a new product or untangling an existing one, I create the clarity your team needs to move forward."
   };
   return <>
+    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
+      "@context": "https://schema.org", "@type": "Service", name: service.title, description: service.description,
+      url: absoluteUrl(`/services/${encodeURIComponent(service.slug)}`), provider: { "@type": "Person", name: "Andrei Stanescu", url: absoluteUrl("/") },
+    }) }} />
     <Nav />
     <main className={styles.main}>
       <section className={`container ${styles.hero}`}>

@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { Nav } from "@/components/Nav/Nav";
@@ -13,8 +14,16 @@ import { BackButton } from "@/components/BackButton/BackButton";
 import styles from "./case-study.module.css";
 import { CaseStudyPasswordGate } from "@/components/CaseStudyPasswordGate/CaseStudyPasswordGate";
 import { caseStudyAccessCookieName, verifyCaseStudyAccessToken } from "@/lib/caseStudyAccess";
+import { contentMetadata, absoluteUrl } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const study = getCaseStudyBySlug(slug);
+  if (!study) return {};
+  return contentMetadata({ title: `${study.title} | Andrei Stanescu`, description: study.description, path: `/work/${encodeURIComponent(study.slug)}`, image: study.cover_image, noIndex: Boolean(study.password_required) });
+}
 
 export default async function CaseStudyDetailPage({ params, searchParams }: { params: Promise<{ slug: string }>; searchParams?: Promise<{ accessError?: string }> }) {
   const { slug } = await params;
@@ -54,6 +63,10 @@ export default async function CaseStudyDetailPage({ params, searchParams }: { pa
   const assessmentToc = hasAssessment ? [{ id: "assessment-overview", text: "Assessment" }, { id: "complexity-profile", text: "Complexity profile" }, { id: "likely-engagement", text: "Likely engagement" }] : [];
 
   return <>
+    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
+      "@context": "https://schema.org", "@type": "CreativeWork", name: study.title, description: study.description,
+      url: absoluteUrl(`/work/${encodeURIComponent(study.slug)}`), image: study.cover_image ? absoluteUrl(study.cover_image) : undefined,
+    }) }} />
     <Nav />
     <main className={styles.main}>
       <section className={styles.hero}>
