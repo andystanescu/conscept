@@ -21,7 +21,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params;
   const insight = getInsightBySlug(slug);
   if (!insight) return {};
-  return contentMetadata({ title: `${insight.title} | Andrei Stanescu`, description: insight.excerpt, path: `/insights/${encodeURIComponent(insight.slug)}`, image: insight.cover_image });
+  return contentMetadata({ title: insight.meta_title || `${insight.title} | Andrei Stanescu`, description: insight.meta_description || insight.excerpt, path: `/insights/${encodeURIComponent(insight.slug)}`, image: insight.og_image || insight.thumbnail_image || insight.cover_image, keywords: insight.meta_keywords, canonicalUrl: insight.canonical_url || undefined, noIndex: Boolean(insight.no_index) });
 }
 
 export default async function InsightDetailPage({
