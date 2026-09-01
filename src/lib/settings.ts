@@ -30,6 +30,8 @@ export type SettingsMap = {
   contact_email_to: string;
   logo_image: string;
   logo_image_footer: string;
+  about_hero_image: string;
+  about_cv: string;
 };
 
 const KEYS: (keyof SettingsMap)[] = [
@@ -62,6 +64,8 @@ const KEYS: (keyof SettingsMap)[] = [
   "contact_email_to",
   "logo_image",
   "logo_image_footer",
+  "about_hero_image",
+  "about_cv",
 ];
 
 export function getSettings(): SettingsMap {
@@ -102,6 +106,8 @@ export function getSettings(): SettingsMap {
     // Falls back to the header logo so existing single-logo setups don't
     // lose their footer logo the moment this field exists but is unset.
     logo_image_footer: map.logo_image_footer || map.logo_image || "",
+    about_hero_image: map.about_hero_image ?? "",
+    about_cv: map.about_cv ?? "",
   };
 }
 

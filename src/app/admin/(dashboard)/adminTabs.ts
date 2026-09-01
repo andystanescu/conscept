@@ -7,6 +7,7 @@ export const ABOUT_TABS = [
   { label: "Sections", href: "/admin/about" },
   { label: "Philosophy", href: "/admin/about-philosophy" },
   { label: "Highlights", href: "/admin/about-highlights" },
+  { label: "Before ConScept", href: "/admin/about-experiences" },
   { label: "Page settings", href: "/admin/about/settings" },
 ];
 

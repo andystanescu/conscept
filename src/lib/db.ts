@@ -165,6 +165,19 @@ db.exec(`
     published INTEGER NOT NULL DEFAULT 1,
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
   );
+
+  CREATE TABLE IF NOT EXISTS about_experiences (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    start_date TEXT NOT NULL DEFAULT '',
+    end_date TEXT NOT NULL DEFAULT '',
+    job_title TEXT NOT NULL DEFAULT '',
+    company_name TEXT NOT NULL DEFAULT '',
+    business_profile TEXT NOT NULL DEFAULT '',
+    description TEXT NOT NULL DEFAULT '',
+    position INTEGER NOT NULL DEFAULT 0,
+    published INTEGER NOT NULL DEFAULT 1,
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+  );
 `);
 
 // Migrate columns added after the tables were first created (CREATE TABLE
@@ -281,6 +294,8 @@ const DEFAULT_SETTINGS: Record<string, string> = {
   confirmation_body: "I reply within two working days.",
   contact_email_to: "",
   logo_image: "",
+  about_hero_image: "",
+  about_cv: "",
 };
 
 // A content-only baseline can be committed as data/content-seed.json. This
@@ -593,7 +608,15 @@ const SEED_HOMEPAGE_SECTIONS = [
     position: 3,
     fixed: 0,
   },
-];
+  {
+    key: "before_conscept",
+    eyebrow: "Before ConScept",
+    headline: "Experience that shaped how I work.",
+    description: "The roles and environments that taught me to look beyond the immediate problem.",
+    position: 4,
+    fixed: 0,
+  },
+]; 
 const insertSectionStmt = db.prepare(
   `INSERT INTO homepage_sections (key, eyebrow, headline, description, position, fixed)
    VALUES (?, ?, ?, ?, ?, ?)`
@@ -801,6 +824,16 @@ for (const section of SEED_ABOUT_SECTIONS) {
       section.fixed
     );
   }
+}
+if (!getAboutSectionStmt.get("before_conscept")) {
+  insertAboutSectionStmt.run(
+    "before_conscept",
+    "Before ConScept",
+    "Experience that shaped how I work.",
+    "The roles and environments that taught me to look beyond the immediate problem.",
+    4,
+    0
+  );
 }
 
 const SEED_PHILOSOPHY_ITEMS = [

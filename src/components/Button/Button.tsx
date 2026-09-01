@@ -10,6 +10,7 @@ type ButtonProps = {
   size?: "default" | "compact";
   /** Only applies when there's no href (i.e. it renders as <button>). */
   type?: "button" | "submit";
+  download?: boolean;
 };
 
 /**
@@ -26,6 +27,7 @@ export function Button({
   onClick,
   size = "default",
   type = "button",
+  download,
 }: ButtonProps) {
   const className = `${styles.button} ${styles[variant]} ${
     size === "compact" ? styles.compact : ""
@@ -40,7 +42,7 @@ export function Button({
 
   if (href) {
     return (
-      <a className={className} href={href} onClick={onClick}>
+      <a className={className} href={href} onClick={onClick} download={download || undefined}>
         {content}
       </a>
     );

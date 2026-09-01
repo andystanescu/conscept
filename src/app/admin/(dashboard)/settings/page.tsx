@@ -41,6 +41,21 @@ export default async function AdminSettingsPage() {
 
         <label className={styles.field}>
           <span className="label-small" style={{ color: "var(--text-secondary)" }}>
+            Personal About CV (PDF)
+          </span>
+          <input type="file" name="about_cv" accept="application/pdf,.pdf" className={styles.input} />
+          {settings.about_cv && (
+            <a href={settings.about_cv} target="_blank" rel="noreferrer" className="body-small">
+              View current CV
+            </a>
+          )}
+          <span className="body-small" style={{ color: "var(--text-tertiary)" }}>
+            Downloaded by the Download CV button on the Personal About page. Leave empty to keep the current file.
+          </span>
+        </label>
+
+        <label className={styles.field}>
+          <span className="label-small" style={{ color: "var(--text-secondary)" }}>
             Contact form: send submissions to
           </span>
           <input

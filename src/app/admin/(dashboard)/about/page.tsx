@@ -13,6 +13,7 @@ const LABELS: Record<string, string> = {
   philosophy: "Philosophy",
   highlights: "Highlights",
   latest_insights: "Latest Insights",
+  before_conscept: "Before ConScept",
 };
 
 export default function AdminAboutPage() {

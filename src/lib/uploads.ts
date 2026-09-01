@@ -51,6 +51,36 @@ export async function saveUploadedImage(file: File): Promise<string> {
   return `/uploads/${filename}`;
 }
 
+export async function saveUploadedPdf(file: File): Promise<string> {
+  if (file.type !== "application/pdf") {
+    throw new UploadError("Unsupported file type. Upload a PDF.");
+  }
+  if (file.size > MAX_BYTES) {
+    throw new UploadError("PDF is too large — 8MB max.");
+  }
+
+  const uploadsDir = getUploadsDir();
+  if (!existsSync(/*turbopackIgnore: true*/ uploadsDir)) {
+    await mkdir(uploadsDir, { recursive: true });
+  }
+  const filename = `${randomUUID()}.pdf`;
+  const bytes = Buffer.from(await file.arrayBuffer());
+  await writeFile(join(/*turbopackIgnore: true*/ uploadsDir, filename), bytes);
+  return `/uploads/${filename}`;
+}
+
+export async function resolvePdfField(
+  form: FormData,
+  field: string,
+  existingUrl: string
+): Promise<string> {
+  const value = form.get(field);
+  if (value instanceof File && value.size > 0) {
+    return saveUploadedPdf(value);
+  }
+  return existingUrl;
+}
+
 // Resolves a cover/thumbnail form field to a URL: uploads a newly chosen
 // file, or falls back to the existing value so re-saving a form without
 // picking a new file doesn't wipe out the image already on record.

@@ -10,7 +10,6 @@ import styles from "./Footer.module.css";
 
 const COMPANY_LINKS = [
   { label: "About", href: "/about" },
-  { label: "Approach", href: "/approach" },
   { label: "Work", href: "/work" },
   { label: "Insights", href: "/insights" },
   { label: "Services", href: "/services" },
