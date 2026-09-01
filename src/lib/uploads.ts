@@ -39,14 +39,14 @@ export async function saveUploadedImage(file: File): Promise<string> {
   }
 
   const uploadsDir = getUploadsDir();
-  if (!existsSync(uploadsDir)) {
+  if (!existsSync(/*turbopackIgnore: true*/ uploadsDir)) {
     await mkdir(uploadsDir, { recursive: true });
   }
 
   const ext = ALLOWED_TYPES[file.type];
   const filename = `${randomUUID()}.${ext}`;
   const bytes = Buffer.from(await file.arrayBuffer());
-  await writeFile(join(uploadsDir, filename), bytes);
+  await writeFile(join(/*turbopackIgnore: true*/ uploadsDir, filename), bytes);
 
   return `/uploads/${filename}`;
 }
