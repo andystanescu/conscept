@@ -4,10 +4,17 @@ import { Footer } from "@/components/Footer/Footer";
 import { RichContent } from "@/components/RichContent/RichContent";
 import { getInsights } from "@/data/insights";
 import { getPublishedPage } from "@/lib/pages";
+import { pageMetadata } from "@/lib/seo";
+import type { Metadata } from "next";
 import { InsightsListing } from "@/components/insights/InsightsListing/InsightsListing";
 import styles from "./insights.module.css";
 
 export const dynamic = "force-dynamic";
+
+export function generateMetadata(): Metadata {
+  const page = getPublishedPage("insights");
+  return page ? pageMetadata(page, "/insights") : {};
+}
 
 export default function InsightsPage() {
   const page = getPublishedPage("insights");
@@ -27,6 +34,12 @@ export default function InsightsPage() {
     category: insight.category,
     author: insight.author,
     tags: insight.tags,
+    meta_title: insight.meta_title,
+    meta_description: insight.meta_description,
+    meta_keywords: insight.meta_keywords,
+    canonical_url: insight.canonical_url,
+    og_image: insight.og_image,
+    no_index: insight.no_index,
   }));
 
   return (

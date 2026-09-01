@@ -14,6 +14,12 @@ export type Insight = {
   category: string;
   author: string;
   tags: string;
+  meta_title: string;
+  meta_description: string;
+  meta_keywords: string;
+  canonical_url: string;
+  og_image: string;
+  no_index: number;
 };
 
 // Order = recency/curation via `position` — the first entry is the one
