@@ -37,7 +37,13 @@ db.exec(`
     thumbnail_image TEXT NOT NULL DEFAULT '',
     position INTEGER NOT NULL DEFAULT 0,
     published INTEGER NOT NULL DEFAULT 1,
-    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    meta_title TEXT NOT NULL DEFAULT '',
+    meta_description TEXT NOT NULL DEFAULT '',
+    meta_keywords TEXT NOT NULL DEFAULT '',
+    canonical_url TEXT NOT NULL DEFAULT '',
+    og_image TEXT NOT NULL DEFAULT '',
+    no_index INTEGER NOT NULL DEFAULT 0
   );
 
   CREATE TABLE IF NOT EXISTS insights (
@@ -51,7 +57,13 @@ db.exec(`
     published_at TEXT NOT NULL,
     position INTEGER NOT NULL DEFAULT 0,
     published INTEGER NOT NULL DEFAULT 1,
-    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    meta_title TEXT NOT NULL DEFAULT '',
+    meta_description TEXT NOT NULL DEFAULT '',
+    meta_keywords TEXT NOT NULL DEFAULT '',
+    canonical_url TEXT NOT NULL DEFAULT '',
+    og_image TEXT NOT NULL DEFAULT '',
+    no_index INTEGER NOT NULL DEFAULT 0
   );
 
   CREATE TABLE IF NOT EXISTS settings (
@@ -184,6 +196,12 @@ addColumnIfMissing("case_studies", "password_required", "password_required INTEG
 addColumnIfMissing("case_studies", "password_hashes", "password_hashes TEXT NOT NULL DEFAULT '[]'");
 addColumnIfMissing("case_studies", "author", "author TEXT NOT NULL DEFAULT 'Andrei Stanescu'");
 addColumnIfMissing("case_studies", "published_at", "published_at TEXT NOT NULL DEFAULT ''");
+addColumnIfMissing("case_studies", "meta_title", "meta_title TEXT NOT NULL DEFAULT ''");
+addColumnIfMissing("case_studies", "meta_description", "meta_description TEXT NOT NULL DEFAULT ''");
+addColumnIfMissing("case_studies", "meta_keywords", "meta_keywords TEXT NOT NULL DEFAULT ''");
+addColumnIfMissing("case_studies", "canonical_url", "canonical_url TEXT NOT NULL DEFAULT ''");
+addColumnIfMissing("case_studies", "og_image", "og_image TEXT NOT NULL DEFAULT ''");
+addColumnIfMissing("case_studies", "no_index", "no_index INTEGER NOT NULL DEFAULT 0");
 addColumnIfMissing(
   "case_studies",
   "cover_image",
@@ -211,12 +229,24 @@ addColumnIfMissing(
   "author",
   "author TEXT NOT NULL DEFAULT 'Andrei Stanescu'"
 );
+addColumnIfMissing("insights", "meta_title", "meta_title TEXT NOT NULL DEFAULT ''");
+addColumnIfMissing("insights", "meta_description", "meta_description TEXT NOT NULL DEFAULT ''");
+addColumnIfMissing("insights", "meta_keywords", "meta_keywords TEXT NOT NULL DEFAULT ''");
+addColumnIfMissing("insights", "canonical_url", "canonical_url TEXT NOT NULL DEFAULT ''");
+addColumnIfMissing("insights", "og_image", "og_image TEXT NOT NULL DEFAULT ''");
+addColumnIfMissing("insights", "no_index", "no_index INTEGER NOT NULL DEFAULT 0");
 addColumnIfMissing(
   "pages",
   "show_in_nav",
   "show_in_nav INTEGER NOT NULL DEFAULT 0"
 );
 addColumnIfMissing("pages", "visible", "visible INTEGER NOT NULL DEFAULT 1");
+addColumnIfMissing("pages", "meta_title", "meta_title TEXT NOT NULL DEFAULT ''");
+addColumnIfMissing("pages", "meta_description", "meta_description TEXT NOT NULL DEFAULT ''");
+addColumnIfMissing("pages", "meta_keywords", "meta_keywords TEXT NOT NULL DEFAULT ''");
+addColumnIfMissing("pages", "canonical_url", "canonical_url TEXT NOT NULL DEFAULT ''");
+addColumnIfMissing("pages", "og_image", "og_image TEXT NOT NULL DEFAULT ''");
+addColumnIfMissing("pages", "no_index", "no_index INTEGER NOT NULL DEFAULT 0");
 addColumnIfMissing("service_items", "card_size", "card_size TEXT NOT NULL DEFAULT 'standard'");
 addColumnIfMissing("pages", "nav_label", "nav_label TEXT NOT NULL DEFAULT ''");
 addColumnIfMissing("pages", "position", "position INTEGER NOT NULL DEFAULT 0");

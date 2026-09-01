@@ -24,6 +24,12 @@ export async function POST(
   const author = getSettings().author_name;
   const tags = String(form.get("tags") ?? "").trim();
   const body = applyHeadingAccents(String(form.get("body") ?? "").trim());
+  const metaTitle = String(form.get("meta_title") ?? "").trim();
+  const metaDescription = String(form.get("meta_description") ?? "").trim();
+  const metaKeywords = String(form.get("meta_keywords") ?? "").trim();
+  const canonicalUrl = String(form.get("canonical_url") ?? "").trim();
+  const ogImage = String(form.get("og_image") ?? "").trim();
+  const noIndex = form.get("no_index") === "on" ? 1 : 0;
   const intent = String(form.get("intent") ?? "publish");
   const passwordRequired = form.get("password_required") === "on" ? 1 : 0;
   const rawPasswordAdditions = String(form.get("password_add") ?? "");
@@ -94,7 +100,7 @@ export async function POST(
   try {
     db.prepare(
       `UPDATE case_studies
-       SET slug = ?, eyebrow = ?, category = ?, year = ?, title = ?, description = ?, tags = ?, body = ?, cover_image = ?, thumbnail_image = ?, outcome_eyebrow = ?, outcome_title = ?, metrics = ?, assessment = ?, password_required = ?, password_hashes = ?, published = ?, author = ?, published_at = ?
+       SET slug = ?, eyebrow = ?, category = ?, year = ?, title = ?, description = ?, tags = ?, body = ?, cover_image = ?, thumbnail_image = ?, outcome_eyebrow = ?, outcome_title = ?, metrics = ?, assessment = ?, password_required = ?, password_hashes = ?, published = ?, author = ?, published_at = ?, meta_title = ?, meta_description = ?, meta_keywords = ?, canonical_url = ?, og_image = ?, no_index = ?
        WHERE id = ?`
     ).run(
       slug,
@@ -116,6 +122,12 @@ export async function POST(
       published,
       author,
       publishedAt || dateInputValue(existing?.published_at ?? ""),
+      metaTitle,
+      metaDescription,
+      metaKeywords,
+      canonicalUrl,
+      ogImage,
+      noIndex,
       id
     );
   } catch {

@@ -2,6 +2,8 @@ import { RichTextEditor } from "@/components/admin/RichTextEditor/RichTextEditor
 import { ImageField } from "@/components/admin/ImageField/ImageField";
 import styles from "../../admin.module.css";
 import { todayInputValue } from "@/lib/dateUtils";
+import { MetadataFields } from "@/components/admin/MetadataFields/MetadataFields";
+import { AdminContentTabs } from "@/components/admin/AdminContentTabs/AdminContentTabs";
 
 export default async function NewCaseStudyPage({
   searchParams,
@@ -20,6 +22,8 @@ export default async function NewCaseStudyPage({
         method="POST"
         encType="multipart/form-data"
       >
+        <AdminContentTabs tabs={[
+          { id: "details", label: "Details", content: <>
         <label className={styles.field}>
           <span className="label-small" style={{ color: "var(--text-secondary)" }}>Published date</span>
           <input type="date" name="published_at" defaultValue={todayInputValue()} className={styles.input} />
@@ -85,6 +89,9 @@ export default async function NewCaseStudyPage({
           <input type="checkbox" name="published" defaultChecked />
           <span className="body-default">Published</span>
         </label>
+          </> },
+          { id: "metadata", label: "Metadata and SEO", content: <div className={styles.field}><span className="label-eyebrow">Metadata and SEO</span><MetadataFields /></div> },
+        ]} />
 
         <div className={styles.formActions}>
           <button type="submit" className={styles.submit}>

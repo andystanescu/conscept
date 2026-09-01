@@ -239,6 +239,29 @@
   max-width: none;
 }
 
+.metadataGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-300);
+  width: 100%;
+}
+
+.metadataGrid .field,
+.metadataGrid .checkboxField {
+  min-width: 0;
+}
+
+.metadataGrid .field:nth-child(2),
+.metadataGrid .checkboxField {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 640px) {
+  .metadataGrid { grid-template-columns: 1fr; }
+  .metadataGrid .field:nth-child(2),
+  .metadataGrid .checkboxField { grid-column: auto; }
+}
+
 .input {
   height: 44px;
 }

@@ -1,0 +1,6 @@
+.wrapper { width: 100%; }
+.tabs { display: flex; flex-wrap: wrap; gap: var(--space-300); width: 100%; margin-bottom: var(--space-500); border-bottom: 1px solid var(--border-default); }
+.tab, .active { position: relative; padding: 12px 8px 14px; border: 0; border-radius: 0; background: transparent; color: var(--text-secondary); font: 500 14px/1 var(--font-family-body); cursor: pointer; }
+.tab::after, .active::after { position: absolute; right: 8px; bottom: -1px; left: 8px; height: 2px; background: transparent; content: ""; }
+.tab:hover, .tab:focus-visible, .active { color: var(--text-primary); }
+.active::after { background: var(--accent-foundation); }

@@ -22,6 +22,12 @@ export async function POST(
   const category = String(form.get("category") ?? "").trim();
   const author = getSettings().author_name;
   const tags = String(form.get("tags") ?? "").trim();
+  const metaTitle = String(form.get("meta_title") ?? "").trim();
+  const metaDescription = String(form.get("meta_description") ?? "").trim();
+  const metaKeywords = String(form.get("meta_keywords") ?? "").trim();
+  const canonicalUrl = String(form.get("canonical_url") ?? "").trim();
+  const ogImage = String(form.get("og_image") ?? "").trim();
+  const noIndex = form.get("no_index") === "on" ? 1 : 0;
 
   if (!slug || !title || !excerpt) {
     const url = new URL(`/admin/insights/${id}`, request.url);
@@ -47,7 +53,7 @@ export async function POST(
   try {
     db.prepare(
       `UPDATE insights
-       SET slug = ?, title = ?, excerpt = ?, body = ?, cover_image = ?, thumbnail_image = ?, published_at = ?, published = ?, category = ?, author = ?, tags = ?
+       SET slug = ?, title = ?, excerpt = ?, body = ?, cover_image = ?, thumbnail_image = ?, published_at = ?, published = ?, category = ?, author = ?, tags = ?, meta_title = ?, meta_description = ?, meta_keywords = ?, canonical_url = ?, og_image = ?, no_index = ?
        WHERE id = ?`
     ).run(
       slug,
@@ -61,6 +67,12 @@ export async function POST(
       category,
       author,
       tags,
+      metaTitle,
+      metaDescription,
+      metaKeywords,
+      canonicalUrl,
+      ogImage,
+      noIndex,
       id
     );
   } catch {

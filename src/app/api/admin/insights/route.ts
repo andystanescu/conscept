@@ -17,6 +17,12 @@ export async function POST(request: NextRequest) {
   const category = String(form.get("category") ?? "").trim();
   const author = getSettings().author_name;
   const tags = String(form.get("tags") ?? "").trim();
+  const metaTitle = String(form.get("meta_title") ?? "").trim();
+  const metaDescription = String(form.get("meta_description") ?? "").trim();
+  const metaKeywords = String(form.get("meta_keywords") ?? "").trim();
+  const canonicalUrl = String(form.get("canonical_url") ?? "").trim();
+  const ogImage = String(form.get("og_image") ?? "").trim();
+  const noIndex = form.get("no_index") === "on" ? 1 : 0;
 
   if (!slug || !title || !excerpt) {
     const url = new URL("/admin/insights/new", request.url);
@@ -33,8 +39,8 @@ export async function POST(request: NextRequest) {
 
   try {
     db.prepare(
-      `INSERT INTO insights (slug, title, excerpt, body, cover_image, thumbnail_image, published_at, position, published, category, author, tags)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      `INSERT INTO insights (slug, title, excerpt, body, cover_image, thumbnail_image, published_at, position, published, category, author, tags, meta_title, meta_description, meta_keywords, canonical_url, og_image, no_index)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     ).run(
       slug,
       title,
@@ -47,7 +53,13 @@ export async function POST(request: NextRequest) {
       published,
       category,
       author,
-      tags
+      tags,
+      metaTitle,
+      metaDescription,
+      metaKeywords,
+      canonicalUrl,
+      ogImage,
+      noIndex
     );
   } catch {
     const url = new URL("/admin/insights/new", request.url);

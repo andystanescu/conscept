@@ -13,6 +13,12 @@ export async function POST(request: NextRequest) {
   const title = String(form.get("title") ?? "").trim();
   const description = String(form.get("description") ?? "").trim();
   const tags = String(form.get("tags") ?? "").trim();
+  const metaTitle = String(form.get("meta_title") ?? "").trim();
+  const metaDescription = String(form.get("meta_description") ?? "").trim();
+  const metaKeywords = String(form.get("meta_keywords") ?? "").trim();
+  const canonicalUrl = String(form.get("canonical_url") ?? "").trim();
+  const ogImage = String(form.get("og_image") ?? "").trim();
+  const noIndex = form.get("no_index") === "on" ? 1 : 0;
   const body = applyHeadingAccents(String(form.get("body") ?? "").trim());
   const published = form.get("published") ? 1 : 0;
   const author = getSettings().author_name;
@@ -33,8 +39,8 @@ export async function POST(request: NextRequest) {
 
   try {
     db.prepare(
-      `INSERT INTO case_studies (slug, eyebrow, title, description, tags, body, cover_image, thumbnail_image, position, published, author, published_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      `INSERT INTO case_studies (slug, eyebrow, title, description, tags, body, cover_image, thumbnail_image, position, published, author, published_at, meta_title, meta_description, meta_keywords, canonical_url, og_image, no_index)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     ).run(
       slug,
       eyebrow,
@@ -47,7 +53,13 @@ export async function POST(request: NextRequest) {
       maxPosition.max + 1,
       published,
       author,
-      publishedAt
+      publishedAt,
+      metaTitle,
+      metaDescription,
+      metaKeywords,
+      canonicalUrl,
+      ogImage,
+      noIndex
     );
   } catch {
     const url = new URL("/admin/case-studies/new", request.url);

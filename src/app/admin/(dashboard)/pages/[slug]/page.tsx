@@ -1,6 +1,8 @@
 import { notFound } from "next/navigation";
 import { getPage } from "@/lib/pages";
 import { RichTextEditor } from "@/components/admin/RichTextEditor/RichTextEditor";
+import { MetadataFields } from "@/components/admin/MetadataFields/MetadataFields";
+import { AdminContentTabs } from "@/components/admin/AdminContentTabs/AdminContentTabs";
 import styles from "../../admin.module.css";
 
 export const dynamic = "force-dynamic";
@@ -29,6 +31,8 @@ export default async function EditPagePage({
         action={`/api/admin/pages/${page.slug}`}
         method="POST"
       >
+        <AdminContentTabs tabs={[
+          { id: "details", label: "Details", content: <div>
         <label className={styles.field}>
           <span className="label-small" style={{ color: "var(--text-secondary)" }}>
             Eyebrow
@@ -91,6 +95,10 @@ export default async function EditPagePage({
           </span>
           <RichTextEditor name="body" defaultValue={page.body} />
         </label>
+
+        </div> },
+          { id: "metadata", label: "Metadata and SEO", content: <div className={styles.field}><span className="label-eyebrow">Metadata and SEO</span><MetadataFields values={page} /></div> },
+        ]} />
 
         <div className={styles.formActions}>
           <button type="submit" className={styles.submit}>

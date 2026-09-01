@@ -9,6 +9,12 @@ export type Page = {
   visible: number;
   nav_label: string;
   position: number;
+  meta_title: string;
+  meta_description: string;
+  meta_keywords: string;
+  canonical_url: string;
+  og_image: string;
+  no_index: number;
 };
 
 export function getPage(slug: string): Page | undefined {
@@ -60,11 +66,17 @@ export function updatePage(
     showInNav: boolean;
     visible: boolean;
     navLabel: string;
+    metaTitle: string;
+    metaDescription: string;
+    metaKeywords: string;
+    canonicalUrl: string;
+    ogImage: string;
+    noIndex: boolean;
   }
 ) {
   db.prepare(
     `UPDATE pages
-     SET eyebrow = ?, title = ?, body = ?, show_in_nav = ?, nav_label = ?, visible = ?
+     SET eyebrow = ?, title = ?, body = ?, show_in_nav = ?, nav_label = ?, visible = ?, meta_title = ?, meta_description = ?, meta_keywords = ?, canonical_url = ?, og_image = ?, no_index = ?
      WHERE slug = ?`
   ).run(
     update.eyebrow,
@@ -73,6 +85,12 @@ export function updatePage(
     update.showInNav ? 1 : 0,
     update.navLabel,
     update.visible ? 1 : 0,
+    update.metaTitle,
+    update.metaDescription,
+    update.metaKeywords,
+    update.canonicalUrl,
+    update.ogImage,
+    update.noIndex ? 1 : 0,
     slug
   );
 }
