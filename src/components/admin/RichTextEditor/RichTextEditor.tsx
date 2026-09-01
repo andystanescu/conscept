@@ -9,6 +9,7 @@ import Image from "@tiptap/extension-image";
 import Link from "@tiptap/extension-link";
 import Placeholder from "@tiptap/extension-placeholder";
 import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight";
+import { AllSelection, TextSelection } from "@tiptap/pm/state";
 import { createLowlight, common } from "lowlight";
 import { AccentMark } from "./AccentMark";
 import { LiveComponentBlock } from "@/components/LiveComponentBlock/LiveComponentBlock";
@@ -26,11 +27,9 @@ const InteractiveCodeBlock = CodeBlockLowlight.extend({
     return {
       ...this.parent?.(),
       interactive: {
-        default: false,
-        parseHTML: (element: HTMLElement) =>
-          element.getAttribute("data-interactive") === "true",
-        renderHTML: (attributes: { interactive?: boolean }) =>
-          attributes.interactive ? { "data-interactive": "true" } : {},
+        default: true,
+        parseHTML: () => true,
+        renderHTML: () => ({ "data-interactive": "true" }),
       },
       chrome: {
         default: "framed",
@@ -91,8 +90,10 @@ const ResizableImage = Image.extend({
 
       wrapper.className = styles.resizableImage;
       wrapper.setAttribute("data-resizable-image", "true");
+      wrapper.setAttribute("contenteditable", "false");
       image.src = attrs.src;
       image.alt = attrs.alt || "";
+      image.draggable = true;
       if (attrs.title) image.title = attrs.title;
       if (attrs.width) image.width = Number(attrs.width);
       handle.type = "button";
@@ -110,6 +111,13 @@ const ResizableImage = Image.extend({
             width: String(Math.round(width)),
           })
         );
+      };
+
+      const selectImage = (event: MouseEvent) => {
+        event.preventDefault();
+        event.stopPropagation();
+        const pos = typeof getPos === "function" ? getPos() : null;
+        if (pos != null) editor.commands.setNodeSelection(pos);
       };
 
       const startResize = (event: PointerEvent) => {
@@ -138,6 +146,7 @@ const ResizableImage = Image.extend({
       };
 
       handle.addEventListener("pointerdown", startResize);
+      image.addEventListener("click", selectImage);
       return {
         dom: wrapper,
         stopEvent: (event: Event) => event.target === handle || handle.contains(event.target as Node),
@@ -149,7 +158,10 @@ const ResizableImage = Image.extend({
           else image.removeAttribute("width");
           return true;
         },
-        destroy: () => handle.removeEventListener("pointerdown", startResize),
+        destroy: () => {
+          handle.removeEventListener("pointerdown", startResize);
+          image.removeEventListener("click", selectImage);
+        },
       };
     };
   },
@@ -162,7 +174,7 @@ type RichTextEditorProps = {
   onContentChange?: () => void;
 };
 
-type BlockType = "paragraph" | "eyebrow" | "h1" | "h2" | "h3" | "quote" | "code" | "live";
+type BlockType = "paragraph" | "eyebrow" | "h1" | "h2" | "h3" | "quote" | "code";
 
 type ToolbarIconName =
   | "bold"
@@ -198,10 +210,11 @@ function readToolbarState(editor: Editor | null) {
     hasLiveCode,
     orderedList: editor?.isActive("orderedList") ?? false,
     codeBlock: editor?.isActive("codeBlock") ?? false,
-    interactive: editor?.isActive("codeBlock", { interactive: true }) ?? false,
+    interactive: editor?.isActive("codeBlock") ?? false,
+    inlineCode: editor?.isActive("code") ?? false,
     chrome: (editor?.getAttributes("codeBlock").chrome as "framed" | "minimal" | undefined) ?? "framed",
-    blockType: (editor?.isActive("codeBlock", { interactive: true })
-      ? "live"
+    blockType: (editor?.isActive("codeBlock") || editor?.isActive("code")
+      ? "code"
       : editor?.isActive("paragraph", { className: "label-eyebrow" })
       ? "eyebrow"
       : editor?.isActive("heading", { level: 1 })
@@ -212,9 +225,7 @@ function readToolbarState(editor: Editor | null) {
           ? "h3"
           : editor?.isActive("blockquote")
             ? "quote"
-            : editor?.isActive("codeBlock")
-              ? "code"
-              : "paragraph") as BlockType,
+            : "paragraph") as BlockType,
   };
 }
 
@@ -261,6 +272,29 @@ export function RichTextEditor({
     content: defaultValue,
     editorProps: {
       attributes: { class: styles.content },
+      handleKeyDown: (view, event) => {
+        if (!(event.key.toLowerCase() === "a" && (event.metaKey || event.ctrlKey))) {
+          return false;
+        }
+
+        const { state } = view;
+        const { $from } = state.selection;
+        if ($from.parent.type.name === "codeBlock") {
+          event.preventDefault();
+          view.dispatch(
+            state.tr.setSelection(
+              TextSelection.create(state.doc, $from.start($from.depth), $from.end($from.depth))
+            )
+          );
+          return true;
+        }
+
+        // Make the outside-editor shortcut explicitly include every block,
+        // including live code blocks and images.
+        event.preventDefault();
+        view.dispatch(state.tr.setSelection(new AllSelection(state.doc)));
+        return true;
+      },
     },
     onUpdate: ({ editor }) => {
       if (hiddenInputRef.current) {
@@ -355,9 +389,6 @@ export function RichTextEditor({
         chain.setBlockquote().run();
         break;
       case "code":
-        chain.setCodeBlock().run();
-        break;
-      case "live":
         chain.setCodeBlock().updateAttributes("codeBlock", { interactive: true }).run();
         break;
       default:
@@ -453,9 +484,7 @@ render(<BeforeAfterComparison />);`;
                 ? "Quote"
               : state.blockType === "code"
                   ? "Code"
-                  : state.blockType === "live"
-                    ? "Live code"
-                  : state.blockType === "eyebrow"
+              : state.blockType === "eyebrow"
                     ? "Eyebrow"
                   : state.blockType.toUpperCase()}</span>
             <ToolbarIcon name="chevron-down" />
@@ -479,7 +508,11 @@ render(<BeforeAfterComparison />);`;
                     state.blockType === value ? styles.toolbarButtonActive : ""
                   }`}
                   onClick={() => {
-                    setBlockType(value);
+                    if (value === "code") {
+                      editor.chain().focus().toggleCode().run();
+                    } else {
+                      setBlockType(value);
+                    }
                     setTypeStyleOpen(false);
                   }}
                 >

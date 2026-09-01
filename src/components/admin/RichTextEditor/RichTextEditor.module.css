@@ -590,6 +590,16 @@
   display: block;
   max-width: 100%;
   height: auto;
+  cursor: pointer;
+}
+
+.content:global(.ProseMirror) :global([data-resizable-image].ProseMirror-selectednode) {
+  outline: 2px solid var(--accent-foundation);
+  outline-offset: 3px;
+}
+
+.content:global(.ProseMirror) :global([data-resizable-image].ProseMirror-selectednode img) {
+  cursor: grab;
 }
 
 .imageResizeHandle {
