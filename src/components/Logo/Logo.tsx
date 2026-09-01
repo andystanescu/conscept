@@ -22,7 +22,7 @@ export function Logo({ variant = "compact", theme = "default", identity = "busin
     return (
       <span className={`${styles.logo} ${styles.personal}`}>
         <img
-          src={theme === "inverted" ? "/assets/logo-icon-personal-footer.svg" : "/assets/logo-icon-personal.svg"}
+          src={theme === "inverted" ? "/assets/logo-icon-personal-footer.svg" : variant === "compact" ? "/assets/logo-icon-personal-nav.svg" : "/assets/logo-icon-personal.svg"}
           alt=""
           width={icon}
           height={icon}
