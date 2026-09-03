@@ -14,9 +14,10 @@ export type ServiceItem = {
 };
 
 export function getServiceItems(): ServiceItem[] {
-  return db
+  const rows = db
     .prepare("SELECT * FROM service_items WHERE published = 1 ORDER BY position ASC")
     .all() as ServiceItem[];
+  return rows.map((row) => ({ ...row }));
 }
 
 export function getAllServiceItemsAdmin(): ServiceItem[] {

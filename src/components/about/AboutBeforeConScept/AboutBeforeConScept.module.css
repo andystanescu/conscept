@@ -7,7 +7,7 @@
 .identity { display: flex; min-width: 0; flex-direction: column; gap: 6px; }
 .identity h3 { color: var(--text-primary); font-size: 18px; font-weight: 600; }
 .company { color: var(--text-secondary); font-size: 13px; font-weight: 500; }
-.description { color: var(--text-secondary); font-size: 15px; line-height: 1.5; }
+.description { color: var(--text-secondary); font-size: 15px; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }
 @media (max-width: 700px) {
   .intro { width: 100%; max-width: 100%; }
   .card { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }

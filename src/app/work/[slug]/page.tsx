@@ -17,6 +17,7 @@ import { caseStudyAccessCookieName, verifyCaseStudyAccessToken } from "@/lib/cas
 import { contentMetadata, absoluteUrl } from "@/lib/seo";
 import { getSettings } from "@/lib/settings";
 import { displayDate } from "@/lib/dateUtils";
+import { AuthorAvatar } from "@/components/AuthorAvatar/AuthorAvatar";
 
 export const dynamic = "force-dynamic";
 
@@ -82,7 +83,7 @@ export default async function CaseStudyDetailPage({ params, searchParams }: { pa
           <p className="label-eyebrow" style={{ color: "var(--text-accent)" }}>{study.category || study.eyebrow || "CASE STUDY"}</p>
           <h1 className="display-small">{study.title}</h1>
           <p className="body-large" style={{ color: "var(--text-secondary)" }}>{study.description}</p>
-          {metadata && <p className={styles.meta}>{metadata}</p>}
+          {metadata && <div className={styles.meta}><span>{study.category}</span><span>{study.year}</span><AuthorAvatar author={study.author || authorName} /><span>{publishedAt}</span></div>}
         </div>
         {study.cover_image && <div className={styles.heroImage}><img src={study.cover_image} alt="" /></div>}
       </section>
