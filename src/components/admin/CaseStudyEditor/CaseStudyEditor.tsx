@@ -14,10 +14,11 @@ import { MetadataFields } from "@/components/admin/MetadataFields/MetadataFields
 
 type ServiceOption = { slug: string; title: string };
 type PasswordEntry = { name: string; masked: string };
-type Props = { study: CaseStudy; metrics: CaseStudyMetric[]; assessment: CaseStudyAssessment; services: ServiceOption[]; passwordRequired: boolean; passwordEntries: PasswordEntry[] };
+type Props = { study: CaseStudy; metrics: CaseStudyMetric[]; assessment: CaseStudyAssessment; services: ServiceOption[]; passwordRequired: boolean; passwordEntries: PasswordEntry[]; action?: string };
 type Tab = "details" | "outcomes" | "assessment" | "content" | "metadata" | "visibility";
 
-export function CaseStudyEditor({ study, metrics, assessment, services, passwordRequired, passwordEntries }: Props) {
+export function CaseStudyEditor({ study, metrics, assessment, services, passwordRequired, passwordEntries, action }: Props) {
+  const editing = study.id > 0;
   const [tab, setTab] = useState<Tab>("content");
   const studyAuthor = "author" in study && typeof study.author === "string" ? study.author : "";
   const publishedDate = "published_at" in study && typeof study.published_at === "string" ? study.published_at : "";
@@ -59,7 +60,7 @@ export function CaseStudyEditor({ study, metrics, assessment, services, password
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
   }, []);
   return (
-    <form ref={formRef} className={adminStyles.form} action={`/api/admin/case-studies/${study.id}`} method="POST" encType="multipart/form-data" onInput={scheduleDraftSave} onChange={scheduleDraftSave}>
+    <form ref={formRef} className={adminStyles.form} action={action ?? `/api/admin/case-studies/${study.id}`} method="POST" encType="multipart/form-data" onInput={editing ? scheduleDraftSave : undefined} onChange={editing ? scheduleDraftSave : undefined}>
       <div className={styles.tabs} role="tablist" aria-label="Case study details">
         {(["content", "details", "outcomes", "assessment", "metadata", "visibility"] as const).map((value) => (
           <button key={value} id={`case-study-tab-${value}`} type="button" role="tab" aria-selected={tab === value} aria-controls={`case-study-panel-${value}`} tabIndex={tab === value ? 0 : -1} className={tab === value ? styles.tabActive : styles.tab} onClick={() => setTab(value)}>
@@ -113,7 +114,7 @@ export function CaseStudyEditor({ study, metrics, assessment, services, password
         <div className={styles.passwordManager}><div className={styles.passwordManagerHeader}><div><h2 className="heading-03">Accepted passwords</h2><p className="body-small">{passwordEntries.length} active {passwordEntries.length === 1 ? "password" : "passwords"}. New passwords remain visible until this draft is saved.</p></div></div><PasswordManager passwordEntries={passwordEntries} onCommit={scheduleDraftSave} /></div>
       </section>
 
-      <div className={adminStyles.formActions}><span className="body-small" aria-live="polite">{saveState === "saving" ? "Saving draft…" : saveState === "error" ? "Draft could not be saved" : "Draft saved"}</span><button type="submit" name="intent" value="publish" className={adminStyles.submit}><span className="label-button">Publish</span></button></div>
+      <div className={adminStyles.formActions}>{editing && <span className="body-small" aria-live="polite">{saveState === "saving" ? "Saving draft…" : saveState === "error" ? "Draft could not be saved" : "Draft saved"}</span>}<button type="submit" name="intent" value="publish" className={adminStyles.submit}><span className="label-button">{editing ? "Publish" : "Create case study"}</span></button></div>
     </form>
   );
 }
