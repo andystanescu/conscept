@@ -37,8 +37,8 @@ export function InsightsListing({ insights }: { insights: Insight[] }) {
 
         <Link href={`/insights/${featured.slug}`} className={styles.featured}>
           <div className={styles.featuredVisual} style={featured.thumbnail_image ? { backgroundImage: `url(${featured.thumbnail_image})` } : undefined}>
-            <span className={styles.badge}>Featured</span>
             {!featured.thumbnail_image && <img src="/assets/lattice-diagram.svg" alt="" className={styles.lattice} />}
+            <span className={styles.featuredMeta}><i aria-hidden="true" />{featured.category || "INSIGHTS"}{featured.published_at ? ` · ${new Date(featured.published_at).getFullYear()}` : ""}</span>
           </div>
           <div className={styles.featuredCopy}>
             <p className="label-eyebrow" style={{ color: "var(--text-accent)" }}>{featured.category || "INSIGHTS"}</p>

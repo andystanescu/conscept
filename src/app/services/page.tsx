@@ -4,6 +4,8 @@ import { Nav } from "@/components/Nav/Nav";
 import { Footer } from "@/components/Footer/Footer";
 import { RichContent } from "@/components/RichContent/RichContent";
 import { getPublishedPage } from "@/lib/pages";
+import { pageMetadata } from "@/lib/seo";
+import type { Metadata } from "next";
 import { getServiceItems } from "@/lib/serviceItems";
 import { LatticeDiagram } from "@/components/home/Hero/LatticeDiagram";
 import { LatticeInteractive } from "@/components/home/Hero/LatticeInteractive";
@@ -12,6 +14,11 @@ import { LatestInsights } from "@/components/home/LatestInsights/LatestInsights"
 import styles from "./services.module.css";
 
 export const dynamic = "force-dynamic";
+
+export function generateMetadata(): Metadata {
+  const page = getPublishedPage("services");
+  return page ? pageMetadata(page, "/services") : {};
+}
 
 export default function ServicesPage() {
   const page = getPublishedPage("services");

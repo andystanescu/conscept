@@ -26,7 +26,7 @@ export default async function ApproachPageSettingsPage({
         page={page}
         error={error}
         redirect="/admin/approach-steps/settings"
-        note="Eyebrow, title, and body appear at the top of /approach, above the steps."
+        note="These settings now control the How I work section on /about#how-i-work. The Approach admin section remains the place to manage its content."
       />
     </>
   );

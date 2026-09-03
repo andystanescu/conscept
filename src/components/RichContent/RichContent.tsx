@@ -31,7 +31,7 @@ export function RichContent({ html }: RichContentProps) {
     <div className={styles.content}>
       {segments.map((segment, index) =>
         segment.type === "live" ? (
-          <LiveComponentBlock key={index} code={segment.code} />
+          <LiveComponentBlock key={index} code={segment.code} chrome={segment.chrome} />
         ) : segment.content.trim() ? (
           <div
             key={index}

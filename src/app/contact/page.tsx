@@ -4,10 +4,17 @@ import { Footer } from "@/components/Footer/Footer";
 import { RichContent } from "@/components/RichContent/RichContent";
 import { ContactForm } from "@/components/ContactForm/ContactForm";
 import { getPublishedPage } from "@/lib/pages";
+import { pageMetadata } from "@/lib/seo";
+import type { Metadata } from "next";
 import { getSettings } from "@/lib/settings";
 import styles from "./contact.module.css";
 
 export const dynamic = "force-dynamic";
+
+export function generateMetadata(): Metadata {
+  const page = getPublishedPage("contact");
+  return page ? pageMetadata(page, "/contact") : {};
+}
 
 export default function ContactPage() {
   const page = getPublishedPage("contact");

@@ -7,11 +7,18 @@ import { LatticeInteractive } from "@/components/home/Hero/LatticeInteractive";
 import { SelectedImpact } from "@/components/home/SelectedImpact/SelectedImpact";
 import { LatestInsights } from "@/components/home/LatestInsights/LatestInsights";
 import { getPublishedPage } from "@/lib/pages";
+import { pageMetadata } from "@/lib/seo";
+import type { Metadata } from "next";
 import { getApproachSteps } from "@/lib/approachSteps";
 import { getSettings } from "@/lib/settings";
 import styles from "./approach.module.css";
 
 export const dynamic = "force-dynamic";
+
+export function generateMetadata(): Metadata {
+  const page = getPublishedPage("approach");
+  return page ? pageMetadata(page, "/approach") : {};
+}
 
 export default function ApproachPage() {
   const page = getPublishedPage("approach");

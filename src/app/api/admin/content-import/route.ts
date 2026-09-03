@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { mkdir, writeFile } from "fs/promises";
+import { basename, join } from "path";
+import { getUploadsDir } from "@/lib/uploads";
 
 type ContentRecord = Record<string, unknown>;
 
@@ -28,6 +31,9 @@ export async function POST(request: NextRequest) {
       version?: number;
       caseStudies?: ContentRecord[];
       insights?: ContentRecord[];
+      pages?: ContentRecord[];
+      experiences?: ContentRecord[];
+      assets?: { filename?: string; content?: string }[];
     };
     if (payload.format !== "conscept-content" || payload.version !== 1) {
       return NextResponse.json({ error: "This is not a compatible ConScept content export." }, { status: 400 });
@@ -35,6 +41,18 @@ export async function POST(request: NextRequest) {
 
     const caseStudies = Array.isArray(payload.caseStudies) ? payload.caseStudies : [];
     const insights = Array.isArray(payload.insights) ? payload.insights : [];
+    const pages = Array.isArray(payload.pages) ? payload.pages : [];
+    const experiences = Array.isArray(payload.experiences) ? payload.experiences : [];
+
+    if (Array.isArray(payload.assets)) {
+      const uploadsDir = getUploadsDir();
+      await mkdir(uploadsDir, { recursive: true });
+      for (const asset of payload.assets) {
+        const filename = typeof asset.filename === "string" ? basename(asset.filename) : "";
+        if (!filename || filename !== asset.filename || typeof asset.content !== "string") continue;
+        await writeFile(join(uploadsDir, filename), Buffer.from(asset.content, "base64"));
+      }
+    }
 
     db.exec("BEGIN");
     try {
@@ -43,8 +61,9 @@ export async function POST(request: NextRequest) {
           (slug, eyebrow, title, description, tags, position, published, body,
            cover_image, thumbnail_image, category, year, outcome_eyebrow,
            outcome_title, metrics, assessment, password_required, password_hashes,
-           author, published_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+           author, published_at, meta_title, meta_description, meta_keywords,
+           canonical_url, og_image, no_index)
+         VALUES (${Array(26).fill("?").join(",")})
          ON CONFLICT(slug) DO UPDATE SET
           eyebrow=excluded.eyebrow, title=excluded.title, description=excluded.description,
           tags=excluded.tags, position=excluded.position, published=excluded.published,
@@ -54,7 +73,10 @@ export async function POST(request: NextRequest) {
           outcome_title=excluded.outcome_title, metrics=excluded.metrics,
           assessment=excluded.assessment, password_required=excluded.password_required,
           password_hashes=excluded.password_hashes, author=excluded.author,
-          published_at=excluded.published_at`
+          published_at=excluded.published_at, meta_title=excluded.meta_title,
+          meta_description=excluded.meta_description, meta_keywords=excluded.meta_keywords,
+          canonical_url=excluded.canonical_url, og_image=excluded.og_image,
+          no_index=excluded.no_index`
       );
       for (const record of caseStudies) {
         const slug = text(record, "slug").trim();
@@ -67,21 +89,27 @@ export async function POST(request: NextRequest) {
           text(record, "category"), text(record, "year"), text(record, "outcome_eyebrow", "OUTCOMES"),
           text(record, "outcome_title"), list(record.metrics), list(record.assessment),
           integer(record, "password_required"), list(record.password_hashes),
-          text(record, "author", "Andrei Stanescu"), text(record, "published_at")
+          text(record, "author", "Andrei Stanescu"), text(record, "published_at"),
+          text(record, "meta_title"), text(record, "meta_description"), text(record, "meta_keywords"),
+          text(record, "canonical_url"), text(record, "og_image"), integer(record, "no_index")
         );
       }
 
       const upsertInsight = db.prepare(
         `INSERT INTO insights
           (slug, title, excerpt, body, published_at, position, published,
-           cover_image, thumbnail_image, category, author, tags)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+           cover_image, thumbnail_image, category, author, tags, meta_title,
+           meta_description, meta_keywords, canonical_url, og_image, no_index)
+         VALUES (${Array(18).fill("?").join(",")})
          ON CONFLICT(slug) DO UPDATE SET
           title=excluded.title, excerpt=excluded.excerpt, body=excluded.body,
           published_at=excluded.published_at, position=excluded.position,
           published=excluded.published, cover_image=excluded.cover_image,
           thumbnail_image=excluded.thumbnail_image, category=excluded.category,
-          author=excluded.author, tags=excluded.tags`
+          author=excluded.author, tags=excluded.tags, meta_title=excluded.meta_title,
+          meta_description=excluded.meta_description, meta_keywords=excluded.meta_keywords,
+          canonical_url=excluded.canonical_url, og_image=excluded.og_image,
+          no_index=excluded.no_index`
       );
       for (const record of insights) {
         const slug = text(record, "slug").trim();
@@ -91,7 +119,58 @@ export async function POST(request: NextRequest) {
           slug, title, text(record, "excerpt"), text(record, "body"),
           text(record, "published_at"), integer(record, "position"), integer(record, "published", 1),
           text(record, "cover_image"), text(record, "thumbnail_image"), text(record, "category"),
-          text(record, "author", "Andrei Stanescu"), text(record, "tags")
+          text(record, "author", "Andrei Stanescu"), text(record, "tags"),
+          text(record, "meta_title"), text(record, "meta_description"), text(record, "meta_keywords"),
+          text(record, "canonical_url"), text(record, "og_image"), integer(record, "no_index")
+        );
+      }
+
+      const upsertPage = db.prepare(
+        `INSERT INTO pages
+          (slug, eyebrow, title, body, show_in_nav, visible, nav_label, position,
+           meta_title, meta_description, meta_keywords, canonical_url, og_image, no_index)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+         ON CONFLICT(slug) DO UPDATE SET
+          eyebrow=excluded.eyebrow, title=excluded.title, body=excluded.body,
+          show_in_nav=excluded.show_in_nav, visible=excluded.visible,
+          nav_label=excluded.nav_label, position=excluded.position,
+          meta_title=excluded.meta_title, meta_description=excluded.meta_description,
+          meta_keywords=excluded.meta_keywords, canonical_url=excluded.canonical_url,
+          og_image=excluded.og_image, no_index=excluded.no_index`
+      );
+      for (const record of pages) {
+        const slug = text(record, "slug").trim();
+        const title = text(record, "title").trim();
+        if (!slug || !title) continue;
+        upsertPage.run(
+          slug, text(record, "eyebrow"), title, text(record, "body"),
+          integer(record, "show_in_nav"), integer(record, "visible", 1),
+          text(record, "nav_label"), integer(record, "position"),
+          text(record, "meta_title"), text(record, "meta_description"),
+          text(record, "meta_keywords"), text(record, "canonical_url"),
+          text(record, "og_image"), integer(record, "no_index")
+        );
+      }
+
+      const upsertExperience = db.prepare(
+        `INSERT INTO about_experiences
+          (id, start_date, end_date, job_title, company_name, business_profile,
+           description, position, published)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+         ON CONFLICT(id) DO UPDATE SET
+          start_date=excluded.start_date, end_date=excluded.end_date,
+          job_title=excluded.job_title, company_name=excluded.company_name,
+          business_profile=excluded.business_profile, description=excluded.description,
+          position=excluded.position, published=excluded.published`
+      );
+      for (const record of experiences) {
+        const id = integer(record, "id");
+        const jobTitle = text(record, "job_title").trim();
+        if (!id || !jobTitle) continue;
+        upsertExperience.run(
+          id, text(record, "start_date"), text(record, "end_date"), jobTitle,
+          text(record, "company_name"), text(record, "business_profile"),
+          text(record, "description"), integer(record, "position"), integer(record, "published", 1)
         );
       }
       db.exec("COMMIT");
@@ -100,7 +179,7 @@ export async function POST(request: NextRequest) {
       throw error;
     }
 
-    return NextResponse.json({ imported: { caseStudies: caseStudies.length, insights: insights.length } });
+    return NextResponse.json({ imported: { caseStudies: caseStudies.length, insights: insights.length, pages: pages.length, experiences: experiences.length } });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Import failed.";
     return NextResponse.json({ error: `Import failed: ${message}` }, { status: 400 });

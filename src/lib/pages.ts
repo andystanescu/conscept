@@ -123,7 +123,7 @@ export function getNavLinks(): NavLink[] {
       "SELECT slug, title, nav_label FROM pages WHERE show_in_nav = 1 AND visible = 1 ORDER BY position ASC"
     )
     .all() as Pick<Page, "slug" | "title" | "nav_label">[];
-  return pages.map((p) => ({
+  return pages.filter((p) => p.slug !== "approach").map((p) => ({
     label: p.nav_label || p.title,
     href: `/${p.slug}`,
   }));
