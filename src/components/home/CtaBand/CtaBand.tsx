@@ -1,8 +1,10 @@
 import { Button } from "@/components/Button/Button";
 import { ArrowIcon } from "@/components/Icon/ArrowIcon";
 import styles from "./CtaBand.module.css";
+import { getSettings } from "@/lib/settings";
 
 export function CtaBand() {
+  const settings = getSettings();
   return (
     <section className={styles.ctaSection}>
       <div className="container">
@@ -20,7 +22,7 @@ export function CtaBand() {
             that grew too fast.
           </p>
           <Button href="/contact" icon={<ArrowIcon size={16} />}>
-            Start a conversation
+            {settings.homepage_cta_band_label}
           </Button>
         </div>
       </div>

@@ -4,10 +4,12 @@ import { getCaseStudies } from "@/data/caseStudies";
 import { AccentText } from "@/components/AccentText/AccentText";
 import { getSection } from "@/lib/homepage";
 import styles from "./SelectedImpact.module.css";
+import { getSettings } from "@/lib/settings";
 
 export function SelectedImpact() {
   const caseStudies = getCaseStudies();
   const section = getSection("selected_impact")!;
+  const settings = getSettings();
   if (caseStudies.length === 0) {
     return null;
   }
@@ -58,7 +60,7 @@ export function SelectedImpact() {
               </p>
             </div>
             <span className={styles.link}>
-              View case study
+              {settings.homepage_case_study_link_label}
               <ArrowIcon size={16} />
             </span>
           </Link>
@@ -81,7 +83,7 @@ export function SelectedImpact() {
                     <h3 className="heading-03">{study.title}</h3>
                   </div>
                   <span className={styles.link}>
-                    View case study
+                    {settings.homepage_case_study_link_label}
                     <ArrowIcon size={16} />
                   </span>
                 </Link>

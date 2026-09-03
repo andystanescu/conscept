@@ -66,7 +66,8 @@ export async function saveUploadedPdf(file: File): Promise<string> {
   const filename = `${randomUUID()}.pdf`;
   const bytes = Buffer.from(await file.arrayBuffer());
   await writeFile(join(/*turbopackIgnore: true*/ uploadsDir, filename), bytes);
-  return `/uploads/${filename}`;
+  const originalName = (file.name || "cv.pdf").replace(/[\\/]/g, "_").replace(/[^a-zA-Z0-9._ -]/g, "_").trim() || "cv.pdf";
+  return `/uploads/${filename}?filename=${encodeURIComponent(originalName)}`;
 }
 
 export async function resolvePdfField(

@@ -32,6 +32,16 @@ export type SettingsMap = {
   logo_image_footer: string;
   about_hero_image: string;
   about_cv: string;
+  homepage_cta_band_label: string;
+  homepage_case_study_link_label: string;
+  homepage_article_link_label: string;
+  homepage_insights_all_label: string;
+  homepage_meta_title: string;
+  homepage_meta_description: string;
+  homepage_meta_keywords: string;
+  homepage_canonical_url: string;
+  homepage_og_image: string;
+  homepage_no_index: string;
 };
 
 const KEYS: (keyof SettingsMap)[] = [
@@ -66,6 +76,16 @@ const KEYS: (keyof SettingsMap)[] = [
   "logo_image_footer",
   "about_hero_image",
   "about_cv",
+  "homepage_cta_band_label",
+  "homepage_case_study_link_label",
+  "homepage_article_link_label",
+  "homepage_insights_all_label",
+  "homepage_meta_title",
+  "homepage_meta_description",
+  "homepage_meta_keywords",
+  "homepage_canonical_url",
+  "homepage_og_image",
+  "homepage_no_index",
 ];
 
 export function getSettings(): SettingsMap {
@@ -108,6 +128,16 @@ export function getSettings(): SettingsMap {
     logo_image_footer: map.logo_image_footer || map.logo_image || "",
     about_hero_image: map.about_hero_image ?? "",
     about_cv: map.about_cv ?? "",
+    homepage_cta_band_label: map.homepage_cta_band_label ?? "Start a conversation",
+    homepage_case_study_link_label: map.homepage_case_study_link_label ?? "View case study",
+    homepage_article_link_label: map.homepage_article_link_label ?? "Read article",
+    homepage_insights_all_label: map.homepage_insights_all_label ?? "See all insights",
+    homepage_meta_title: map.homepage_meta_title ?? "ConScept — Design systems, product architecture, AI-enabled design operations",
+    homepage_meta_description: map.homepage_meta_description ?? "ConScept helps growing technology companies build the systems behind their products: design system architecture, product architecture, and AI-enabled design operations.",
+    homepage_meta_keywords: map.homepage_meta_keywords ?? "",
+    homepage_canonical_url: map.homepage_canonical_url ?? "",
+    homepage_og_image: map.homepage_og_image ?? "",
+    homepage_no_index: map.homepage_no_index ?? "0",
   };
 }
 

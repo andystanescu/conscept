@@ -5,10 +5,12 @@ import { AccentText } from "@/components/AccentText/AccentText";
 import { ArticleCard } from "@/components/ArticleCard/ArticleCard";
 import { getSection } from "@/lib/homepage";
 import styles from "./LatestInsights.module.css";
+import { getSettings } from "@/lib/settings";
 
 export function LatestInsights() {
   const insights = getInsights();
   const section = getSection("latest_insights")!;
+  const settings = getSettings();
   if (insights.length === 0) {
     return null;
   }
@@ -26,7 +28,7 @@ export function LatestInsights() {
             <AccentText text={section.headline} />
           </h2>
           <Link href="/insights" className={styles.seeAll}>
-            See all insights
+            {settings.homepage_insights_all_label}
             <ArrowIcon size={16} />
           </Link>
         </div>
@@ -58,7 +60,7 @@ export function LatestInsights() {
                 {featured.excerpt}
               </p>
               <span className={styles.link}>
-                Read article
+                {settings.homepage_article_link_label}
                 <ArrowIcon size={16} />
               </span>
             </div>
