@@ -6,8 +6,10 @@ import StarterKit from "@tiptap/starter-kit";
 import Blockquote from "@tiptap/extension-blockquote";
 import Paragraph from "@tiptap/extension-paragraph";
 import Image from "@tiptap/extension-image";
+import Link from "@tiptap/extension-link";
 import Placeholder from "@tiptap/extension-placeholder";
 import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight";
+import { AllSelection, TextSelection } from "@tiptap/pm/state";
 import { createLowlight, common } from "lowlight";
 import { AccentMark } from "./AccentMark";
 import { LiveComponentBlock } from "@/components/LiveComponentBlock/LiveComponentBlock";
@@ -25,11 +27,15 @@ const InteractiveCodeBlock = CodeBlockLowlight.extend({
     return {
       ...this.parent?.(),
       interactive: {
-        default: false,
-        parseHTML: (element: HTMLElement) =>
-          element.getAttribute("data-interactive") === "true",
-        renderHTML: (attributes: { interactive?: boolean }) =>
-          attributes.interactive ? { "data-interactive": "true" } : {},
+        default: true,
+        parseHTML: () => true,
+        renderHTML: () => ({ "data-interactive": "true" }),
+      },
+      chrome: {
+        default: "framed",
+        parseHTML: (element: HTMLElement) => element.getAttribute("data-chrome") || "framed",
+        renderHTML: (attributes: { chrome?: string }) =>
+          attributes.chrome === "minimal" ? { "data-chrome": "minimal" } : {},
       },
     };
   },
@@ -61,6 +67,106 @@ const StyledParagraph = Paragraph.extend({
   },
 });
 
+// Images remain ordinary HTML images when the editor is saved, but in the
+// editor they get a small native corner handle for manual resizing.
+const ResizableImage = Image.extend({
+  addAttributes() {
+    return {
+      ...this.parent?.(),
+      width: {
+        default: null,
+        parseHTML: (element: HTMLElement) => element.getAttribute("width") || null,
+        renderHTML: (attributes: { width?: string | null }) =>
+          attributes.width ? { width: attributes.width } : {},
+      },
+    };
+  },
+  addNodeView() {
+    return ({ node, editor, getPos }) => {
+      const wrapper = document.createElement("span");
+      const image = document.createElement("img");
+      const handle = document.createElement("button");
+      const attrs = node.attrs as { src: string; alt?: string; title?: string; width?: string | null };
+
+      wrapper.className = styles.resizableImage;
+      wrapper.setAttribute("data-resizable-image", "true");
+      wrapper.setAttribute("contenteditable", "false");
+      image.src = attrs.src;
+      image.alt = attrs.alt || "";
+      image.draggable = true;
+      if (attrs.title) image.title = attrs.title;
+      if (attrs.width) image.width = Number(attrs.width);
+      handle.type = "button";
+      handle.className = styles.imageResizeHandle;
+      handle.setAttribute("aria-label", "Resize image");
+      handle.title = "Drag to resize image";
+      wrapper.append(image, handle);
+
+      const updateWidth = (width: number) => {
+        const pos = typeof getPos === "function" ? getPos() : null;
+        if (pos == null) return;
+        editor.view.dispatch(
+          editor.state.tr.setNodeMarkup(pos, undefined, {
+            ...node.attrs,
+            width: String(Math.round(width)),
+          })
+        );
+      };
+
+      const selectImage = (event: MouseEvent) => {
+        event.preventDefault();
+        event.stopPropagation();
+        const pos = typeof getPos === "function" ? getPos() : null;
+        if (pos != null) editor.commands.setNodeSelection(pos);
+      };
+
+      const startResize = (event: PointerEvent) => {
+        event.preventDefault();
+        event.stopPropagation();
+        const startX = event.clientX;
+        const startWidth = image.getBoundingClientRect().width;
+        const maxWidth = editor.view.dom.clientWidth || startWidth;
+        handle.setPointerCapture?.(event.pointerId);
+
+        const move = (moveEvent: PointerEvent) => {
+          const nextWidth = Math.max(120, Math.min(maxWidth, startWidth + moveEvent.clientX - startX));
+          wrapper.style.width = `${nextWidth}px`;
+        };
+        const finish = () => {
+          const width = image.getBoundingClientRect().width;
+          updateWidth(width);
+          wrapper.style.width = "";
+          window.removeEventListener("pointermove", move);
+          window.removeEventListener("pointerup", finish);
+          window.removeEventListener("pointercancel", finish);
+        };
+        window.addEventListener("pointermove", move);
+        window.addEventListener("pointerup", finish, { once: true });
+        window.addEventListener("pointercancel", finish, { once: true });
+      };
+
+      handle.addEventListener("pointerdown", startResize);
+      image.addEventListener("click", selectImage);
+      return {
+        dom: wrapper,
+        stopEvent: (event: Event) => event.target === handle || handle.contains(event.target as Node),
+        update: (updatedNode: typeof node) => {
+          if (updatedNode.type !== node.type) return false;
+          image.src = updatedNode.attrs.src;
+          image.alt = updatedNode.attrs.alt || "";
+          if (updatedNode.attrs.width) image.width = Number(updatedNode.attrs.width);
+          else image.removeAttribute("width");
+          return true;
+        },
+        destroy: () => {
+          handle.removeEventListener("pointerdown", startResize);
+          image.removeEventListener("click", selectImage);
+        },
+      };
+    };
+  },
+});
+
 type RichTextEditorProps = {
   name: string;
   defaultValue?: string;
@@ -68,7 +174,26 @@ type RichTextEditorProps = {
   onContentChange?: () => void;
 };
 
-type BlockType = "paragraph" | "eyebrow" | "h1" | "h2" | "h3" | "quote" | "code" | "live";
+type BlockType = "paragraph" | "eyebrow" | "h1" | "h2" | "h3" | "quote" | "code";
+
+type ToolbarIconName =
+  | "bold"
+  | "italic"
+  | "link"
+  | "bulleted-list"
+  | "ordered-list"
+  | "image"
+  | "code"
+  | "more"
+  | "chevron-down";
+
+function ToolbarIcon({ name }: { name: ToolbarIconName }) {
+  return (
+    <svg className={styles.toolbarIcon} aria-hidden="true" viewBox="0 0 24 24">
+      <use href={`/assets/editor-toolbar-icons.svg#${name}`} />
+    </svg>
+  );
+}
 
 function readToolbarState(editor: Editor | null) {
   const selectedNode = editor?.state.selection.$from.parent;
@@ -85,9 +210,11 @@ function readToolbarState(editor: Editor | null) {
     hasLiveCode,
     orderedList: editor?.isActive("orderedList") ?? false,
     codeBlock: editor?.isActive("codeBlock") ?? false,
-    interactive: editor?.isActive("codeBlock", { interactive: true }) ?? false,
-    blockType: (editor?.isActive("codeBlock", { interactive: true })
-      ? "live"
+    interactive: editor?.isActive("codeBlock") ?? false,
+    inlineCode: editor?.isActive("code") ?? false,
+    chrome: (editor?.getAttributes("codeBlock").chrome as "framed" | "minimal" | undefined) ?? "framed",
+    blockType: (editor?.isActive("codeBlock") || editor?.isActive("code")
+      ? "code"
       : editor?.isActive("paragraph", { className: "label-eyebrow" })
       ? "eyebrow"
       : editor?.isActive("heading", { level: 1 })
@@ -98,9 +225,7 @@ function readToolbarState(editor: Editor | null) {
           ? "h3"
           : editor?.isActive("blockquote")
             ? "quote"
-            : editor?.isActive("codeBlock")
-              ? "code"
-              : "paragraph") as BlockType,
+            : "paragraph") as BlockType,
   };
 }
 
@@ -115,9 +240,17 @@ export function RichTextEditor({
 }: RichTextEditorProps) {
   const hiddenInputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const comparisonBeforeInputRef = useRef<HTMLInputElement>(null);
+  const comparisonAfterInputRef = useRef<HTMLInputElement>(null);
+  const toolbarRef = useRef<HTMLDivElement>(null);
   const typeStyleRef = useRef<HTMLDivElement>(null);
   const [typeStyleOpen, setTypeStyleOpen] = useState(false);
   const [codeExpanded, setCodeExpanded] = useState(false);
+  const [insertMenuOpen, setInsertMenuOpen] = useState(false);
+  const [toolbarOverflowed, setToolbarOverflowed] = useState(false);
+  const [comparisonOpen, setComparisonOpen] = useState(false);
+  const [comparisonBefore, setComparisonBefore] = useState<{ file: File; preview: string } | null>(null);
+  const [comparisonAfter, setComparisonAfter] = useState<{ file: File; preview: string } | null>(null);
 
   const editor = useEditor({
     immediatelyRender: false,
@@ -129,15 +262,39 @@ export function RichTextEditor({
         paragraph: false,
       }),
       StyledParagraph,
+      Link.configure({ openOnClick: false }),
       AttributedBlockquote,
       InteractiveCodeBlock.configure({ lowlight }),
-      Image,
+      ResizableImage,
       Placeholder.configure({ placeholder }),
       AccentMark,
     ],
     content: defaultValue,
     editorProps: {
       attributes: { class: styles.content },
+      handleKeyDown: (view, event) => {
+        if (!(event.key.toLowerCase() === "a" && (event.metaKey || event.ctrlKey))) {
+          return false;
+        }
+
+        const { state } = view;
+        const { $from } = state.selection;
+        if ($from.parent.type.name === "codeBlock") {
+          event.preventDefault();
+          view.dispatch(
+            state.tr.setSelection(
+              TextSelection.create(state.doc, $from.start($from.depth), $from.end($from.depth))
+            )
+          );
+          return true;
+        }
+
+        // Make the outside-editor shortcut explicitly include every block,
+        // including live code blocks and images.
+        event.preventDefault();
+        view.dispatch(state.tr.setSelection(new AllSelection(state.doc)));
+        return true;
+      },
     },
     onUpdate: ({ editor }) => {
       if (hiddenInputRef.current) {
@@ -174,6 +331,26 @@ export function RichTextEditor({
     document.addEventListener("mousedown", closeOnOutsideClick);
     return () => document.removeEventListener("mousedown", closeOnOutsideClick);
   }, [typeStyleOpen]);
+
+  useEffect(() => {
+    const toolbar = toolbarRef.current;
+    if (!toolbar) return;
+
+    const updateOverflow = () => {
+      // Keep every control visible while it fits. The optional insert actions
+      // are moved into the menu only after the toolbar itself overflows.
+      const wasOverflowed = toolbar.classList.contains(styles.toolbarOverflowed);
+      if (wasOverflowed) toolbar.classList.remove(styles.toolbarOverflowed);
+      const isOverflowed = toolbar.scrollWidth > toolbar.clientWidth + 1;
+      if (wasOverflowed) toolbar.classList.add(styles.toolbarOverflowed);
+      setToolbarOverflowed(isOverflowed);
+    };
+
+    updateOverflow();
+    const observer = new ResizeObserver(updateOverflow);
+    observer.observe(toolbar);
+    return () => observer.disconnect();
+  }, [editor, toolbarOverflowed]);
 
   if (!editor) {
     return (
@@ -212,9 +389,6 @@ export function RichTextEditor({
         chain.setBlockquote().run();
         break;
       case "code":
-        chain.setCodeBlock().run();
-        break;
-      case "live":
         chain.setCodeBlock().updateAttributes("codeBlock", { interactive: true }).run();
         break;
       default:
@@ -237,30 +411,63 @@ export function RichTextEditor({
     editor.chain().focus().setImage({ src: data.url }).run();
   };
 
+  const uploadImage = async (file: File): Promise<string | null> => {
+    const formData = new FormData();
+    formData.append("file", file);
+    const res = await fetch("/api/admin/upload", { method: "POST", body: formData });
+    const data = await res.json();
+    if (!res.ok) {
+      window.alert(data.error ?? "Image upload failed.");
+      return null;
+    }
+    return typeof data.url === "string" ? data.url : null;
+  };
+
+  const chooseComparisonImage = (kind: "before" | "after", file: File | undefined) => {
+    if (!file) return;
+    const image = { file, preview: URL.createObjectURL(file) };
+    if (kind === "before") setComparisonBefore(image);
+    else setComparisonAfter(image);
+  };
+
+  const handleComparisonInsert = async () => {
+    if (!comparisonBefore || !comparisonAfter) return;
+    const beforeUrl = await uploadImage(comparisonBefore.file);
+    const afterUrl = await uploadImage(comparisonAfter.file);
+    if (!beforeUrl || !afterUrl) return;
+
+    const comparisonCode = `function BeforeAfterComparison() {
+  const [position, setPosition] = useState(50);
+  return (
+    <div style={{ position: "relative", width: "100%", aspectRatio: "16 / 9", overflow: "hidden", background: "#11161F" }}>
+      <img src={${JSON.stringify(afterUrl)}} alt="After" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+      <img src={${JSON.stringify(beforeUrl)}} alt="Before" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", display: "block", clipPath: "inset(0 " + (100 - position) + "% 0 0)" }} />
+      <span style={{ position: "absolute", top: "12px", left: "12px", padding: "6px 8px", background: "#11161F", color: "#FFF", fontSize: "11px", fontWeight: 700 }}>BEFORE</span>
+      <span style={{ position: "absolute", top: "12px", right: "12px", padding: "6px 8px", background: "#FF8A66", color: "#11161F", fontSize: "11px", fontWeight: 700 }}>AFTER</span>
+      <input aria-label="Compare before and after images" type="range" min="0" max="100" value={position} onChange={(event) => setPosition(Number(event.target.value))} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", opacity: 0, cursor: "ew-resize" }} />
+      <span aria-hidden="true" style={{ position: "absolute", top: "50%", left: "calc(" + position + "% - 18px)", width: "36px", height: "36px", borderRadius: "50%", background: "#FF8A66", color: "#11161F", display: "grid", placeItems: "center", fontWeight: 700, pointerEvents: "none" }}>↔</span>
+    </div>
+  );
+}
+render(<BeforeAfterComparison />);`;
+
+    editor.chain().focus().setCodeBlock().updateAttributes("codeBlock", { interactive: true }).insertContent(comparisonCode).run();
+    setComparisonOpen(false);
+    setComparisonBefore(null);
+    setComparisonAfter(null);
+  };
+
+  const handleLink = () => {
+    const href = window.prompt("Enter a URL", editor.getAttributes("link").href || "https://");
+    if (href) editor.chain().focus().setLink({ href }).run();
+  };
+
   return (
     <div className={styles.wrapper}>
-      <div className={styles.toolbar}>
-        <button
-          type="button"
-          className={`${styles.toolbarButton} ${
-            state.bold ? styles.toolbarButtonActive : ""
-          }`}
-          onClick={() => editor.chain().focus().toggleBold().run()}
-          aria-label="Bold"
-        >
-          B
-        </button>
-        <button
-          type="button"
-          className={`${styles.toolbarButton} ${
-            state.italic ? styles.toolbarButtonActive : ""
-          }`}
-          onClick={() => editor.chain().focus().toggleItalic().run()}
-          aria-label="Italic"
-        >
-          <em>I</em>
-        </button>
-        <span className={styles.toolbarDivider} />
+      <div
+        ref={toolbarRef}
+        className={`${styles.toolbar} ${toolbarOverflowed ? styles.toolbarOverflowed : ""}`}
+      >
         <div className={styles.toolbarSelectWrap} ref={typeStyleRef}>
           <button
             type="button"
@@ -271,29 +478,26 @@ export function RichTextEditor({
             aria-haspopup="listbox"
             title="Text style"
           >
-            {state.blockType === "paragraph"
-              ? "P"
+            <span>{state.blockType === "paragraph"
+              ? "Paragraph"
               : state.blockType === "quote"
-                ? "Q"
+                ? "Quote"
               : state.blockType === "code"
-                  ? "</>"
-                  : state.blockType === "live"
-                    ? "⚡"
-                  : state.blockType === "eyebrow"
-                    ? "E"
-                  : state.blockType.toUpperCase()}
+                  ? "Code"
+              : state.blockType === "eyebrow"
+                    ? "Eyebrow"
+                  : state.blockType.toUpperCase()}</span>
+            <ToolbarIcon name="chevron-down" />
           </button>
         {typeStyleOpen && (
             <div className={styles.toolbarMenu} role="listbox" aria-label="Text style options">
               {([
-                ["paragraph", "Paragraph"],
-                ["eyebrow", "Eyebrow"],
                 ["h1", "Heading 1"],
                 ["h2", "Heading 2"],
                 ["h3", "Heading 3"],
+                ["paragraph", "Paragraph"],
                 ["quote", "Quote"],
                 ["code", "Code"],
-                ["live", "Live code"],
               ] as [BlockType, string][]).map(([value, label]) => (
                 <button
                   key={value}
@@ -304,7 +508,11 @@ export function RichTextEditor({
                     state.blockType === value ? styles.toolbarButtonActive : ""
                   }`}
                   onClick={() => {
-                    setBlockType(value);
+                    if (value === "code") {
+                      editor.chain().focus().toggleCode().run();
+                    } else {
+                      setBlockType(value);
+                    }
                     setTypeStyleOpen(false);
                   }}
                 >
@@ -314,25 +522,28 @@ export function RichTextEditor({
             </div>
           )}
         </div>
-        {state.codeBlock && (
-          <button
-            type="button"
-            className={`${styles.toolbarButton} ${
-              state.interactive ? styles.toolbarButtonActive : ""
-            }`}
-            onClick={() =>
-              editor
-                .chain()
-                .focus()
-                .updateAttributes("codeBlock", { interactive: !state.interactive })
-                .run()
-            }
-            aria-label="Render as live React component"
-            title="Render as a live, running React component on the page instead of highlighted text"
-          >
-            ⚡ Live
-          </button>
-        )}
+        <span className={styles.toolbarDivider} />
+        <button
+          type="button"
+          className={`${styles.toolbarButton} ${
+            state.bold ? styles.toolbarButtonActive : ""
+          }`}
+          onClick={() => editor.chain().focus().toggleBold().run()}
+          aria-label="Bold"
+        >
+          <ToolbarIcon name="bold" />
+        </button>
+        <button
+          type="button"
+          className={`${styles.toolbarButton} ${
+            state.italic ? styles.toolbarButtonActive : ""
+          }`}
+          onClick={() => editor.chain().focus().toggleItalic().run()}
+          aria-label="Italic"
+        >
+          <ToolbarIcon name="italic" />
+        </button>
+        <button type="button" className={styles.toolbarButton} onClick={handleLink} aria-label="Add link" title="Add link"><ToolbarIcon name="link" /></button>
         {state.blockType === "quote" && (
           <input
             className={styles.attributionInput}
@@ -358,7 +569,7 @@ export function RichTextEditor({
           }}
           aria-label="Bullet list"
         >
-          •—
+          <ToolbarIcon name="bulleted-list" />
         </button>
         <button
           type="button"
@@ -372,15 +583,16 @@ export function RichTextEditor({
           }}
           aria-label="Numbered list"
         >
-          1.
+          <ToolbarIcon name="ordered-list" />
         </button>
         <button
           type="button"
           className={styles.toolbarButton}
-          onClick={() => editor.chain().focus().setHorizontalRule().run()}
-          aria-label="Separator line"
+          onClick={() => editor.chain().focus().setCodeBlock().run()}
+          aria-label="Insert code block"
+          title="Insert code block"
         >
-          —
+          <ToolbarIcon name="code" />
         </button>
         <span className={styles.toolbarDivider} />
         <button
@@ -389,7 +601,7 @@ export function RichTextEditor({
           onClick={() => fileInputRef.current?.click()}
           aria-label="Insert image"
         >
-          Image
+          <ToolbarIcon name="image" />
         </button>
         <input
           ref={fileInputRef}
@@ -401,8 +613,82 @@ export function RichTextEditor({
             if (file) handleImageFile(file);
             e.target.value = "";
           }}
-        />
+          />
+        <button
+          type="button"
+          className={`${styles.toolbarButton} ${styles.overflowable}`}
+          onClick={() => { setComparisonOpen(true); setInsertMenuOpen(false); }}
+          aria-label="Insert before and after comparison"
+          title="Insert comparison"
+        >
+          Compare
+        </button>
+        <button
+          type="button"
+          className={`${styles.toolbarButton} ${styles.overflowable}`}
+          onClick={() => editor.chain().focus().setHorizontalRule().run()}
+          aria-label="Insert separator"
+          title="Insert separator"
+        >
+          Separator
+        </button>
+        {toolbarOverflowed && (
+          <button
+            type="button"
+            className={styles.toolbarButton}
+            onClick={() => setInsertMenuOpen((open) => !open)}
+            aria-label="More insert options"
+            aria-expanded={insertMenuOpen}
+            aria-haspopup="menu"
+          >
+            <ToolbarIcon name="more" />
+          </button>
+        )}
+        {toolbarOverflowed && insertMenuOpen && <div className={styles.insertMenu} role="menu">
+          <button type="button" role="menuitem" onClick={() => { setInsertMenuOpen(false); setComparisonOpen(true); }}>Comparison</button>
+          <button type="button" role="menuitem" onClick={() => { setInsertMenuOpen(false); editor.chain().focus().setHorizontalRule().run(); }}>Separator</button>
+        </div>}
       </div>
+      {comparisonOpen && (
+        <div className={styles.comparisonWidget} role="dialog" aria-label="Create before and after comparison">
+          <div className={styles.comparisonWidgetHeader}>
+            <div>
+              <p className={styles.comparisonWidgetEyebrow}>COMPARISON</p>
+              <p className={styles.comparisonWidgetTitle}>Add a before and after frame</p>
+            </div>
+            <button type="button" className={styles.comparisonClose} onClick={() => setComparisonOpen(false)} aria-label="Close comparison setup">×</button>
+          </div>
+          <p className={styles.comparisonWidgetHint}>Upload each image into its named position so the slider uses the correct order.</p>
+          <div className={styles.comparisonSlots}>
+            {(["before", "after"] as const).map((kind) => {
+              const selected = kind === "before" ? comparisonBefore : comparisonAfter;
+              return (
+                <div className={styles.comparisonSlot} key={kind}>
+                  <p className={styles.comparisonSlotLabel}>{kind === "before" ? "Before image" : "After image"}</p>
+                  <button type="button" className={styles.comparisonUpload} onClick={() => (kind === "before" ? comparisonBeforeInputRef : comparisonAfterInputRef).current?.click()}>
+                    {selected ? <img src={selected.preview} alt={`${kind} preview`} /> : <span>Choose image</span>}
+                  </button>
+                  <input
+                    ref={kind === "before" ? comparisonBeforeInputRef : comparisonAfterInputRef}
+                    type="file"
+                    accept="image/*"
+                    hidden
+                    onChange={(event) => {
+                      chooseComparisonImage(kind, event.target.files?.[0]);
+                      event.target.value = "";
+                    }}
+                  />
+                  <span className={styles.comparisonSlotAction}>{selected ? "Replace image" : "Upload image"}</span>
+                </div>
+              );
+            })}
+          </div>
+          <div className={styles.comparisonWidgetActions}>
+            <button type="button" className={styles.comparisonCancel} onClick={() => setComparisonOpen(false)}>Cancel</button>
+            <button type="button" className={styles.comparisonInsert} disabled={!comparisonBefore || !comparisonAfter} onClick={() => void handleComparisonInsert()}>Insert comparison</button>
+          </div>
+        </div>
+      )}
       <div className={state.hasLiveCode && !codeExpanded ? styles.collapsedLiveCode : undefined}>
         <EditorContent editor={editor} />
       </div>

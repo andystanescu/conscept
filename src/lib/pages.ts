@@ -9,6 +9,12 @@ export type Page = {
   visible: number;
   nav_label: string;
   position: number;
+  meta_title: string;
+  meta_description: string;
+  meta_keywords: string;
+  canonical_url: string;
+  og_image: string;
+  no_index: number;
 };
 
 export function getPage(slug: string): Page | undefined {
@@ -60,11 +66,17 @@ export function updatePage(
     showInNav: boolean;
     visible: boolean;
     navLabel: string;
+    metaTitle: string;
+    metaDescription: string;
+    metaKeywords: string;
+    canonicalUrl: string;
+    ogImage: string;
+    noIndex: boolean;
   }
 ) {
   db.prepare(
     `UPDATE pages
-     SET eyebrow = ?, title = ?, body = ?, show_in_nav = ?, nav_label = ?, visible = ?
+     SET eyebrow = ?, title = ?, body = ?, show_in_nav = ?, nav_label = ?, visible = ?, meta_title = ?, meta_description = ?, meta_keywords = ?, canonical_url = ?, og_image = ?, no_index = ?
      WHERE slug = ?`
   ).run(
     update.eyebrow,
@@ -73,6 +85,12 @@ export function updatePage(
     update.showInNav ? 1 : 0,
     update.navLabel,
     update.visible ? 1 : 0,
+    update.metaTitle,
+    update.metaDescription,
+    update.metaKeywords,
+    update.canonicalUrl,
+    update.ogImage,
+    update.noIndex ? 1 : 0,
     slug
   );
 }
@@ -105,7 +123,7 @@ export function getNavLinks(): NavLink[] {
       "SELECT slug, title, nav_label FROM pages WHERE show_in_nav = 1 AND visible = 1 ORDER BY position ASC"
     )
     .all() as Pick<Page, "slug" | "title" | "nav_label">[];
-  return pages.map((p) => ({
+  return pages.filter((p) => p.slug !== "approach").map((p) => ({
     label: p.nav_label || p.title,
     href: `/${p.slug}`,
   }));

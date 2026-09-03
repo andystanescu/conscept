@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { hasAdminCredentials, saveAdminCredentials } from "@/lib/auth";
+import { relativeRedirect } from "@/lib/relativeRedirect";
 
 export async function POST(request: NextRequest) {
   const form = await request.formData();
@@ -9,10 +10,8 @@ export async function POST(request: NextRequest) {
   const confirmation = String(form.get("confirmation") ?? "");
 
   const redirectWithError = (message: string) => {
-    const url = new URL("/admin/login", request.url);
-    url.searchParams.set("mode", "setup");
-    url.searchParams.set("error", message);
-    return NextResponse.redirect(url, 303);
+    const params = new URLSearchParams({ mode: "setup", error: message });
+    return relativeRedirect(`/admin/login?${params}`);
   };
 
   if (hasAdminCredentials()) {
@@ -23,7 +22,8 @@ export async function POST(request: NextRequest) {
   if (password !== confirmation) return redirectWithError("Passwords do not match.");
 
   saveAdminCredentials(username, await bcrypt.hash(password, 12));
-  const url = new URL("/admin/login", request.url);
-  url.searchParams.set("success", "Your admin password is ready. Sign in to continue.");
-  return NextResponse.redirect(url, 303);
+  const params = new URLSearchParams({
+    success: "Your admin password is ready. Sign in to continue.",
+  });
+  return relativeRedirect(`/admin/login?${params}`);
 }

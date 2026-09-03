@@ -21,7 +21,7 @@ export default function AdminApproachStepsPage() {
         </Link>
       </div>
       <p className={`body-small ${styles.helper}`} style={{ maxWidth: 640 }}>
-        Listed on /approach. Toggle &ldquo;Show on homepage&rdquo; on a
+        Listed in the How I work section on /about. Toggle &ldquo;Show on homepage&rdquo; on a
         step&apos;s edit screen to also feature it in the homepage Approach
         section. Drag to reorder, or use the arrows.
       </p>

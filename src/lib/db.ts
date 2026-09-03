@@ -1,5 +1,5 @@
 import { DatabaseSync } from "node:sqlite";
-import { existsSync, mkdirSync } from "fs";
+import { existsSync, mkdirSync, readFileSync } from "fs";
 import { join } from "path";
 
 // Node's built-in SQLite (available since Node 22.5, no native compile step
@@ -19,6 +19,11 @@ const globalForDb = globalThis as unknown as { __conscept_db?: DatabaseSync };
 export const db = globalForDb.__conscept_db ?? new DatabaseSync(dbPath);
 globalForDb.__conscept_db = db;
 
+// GoDaddy may collect API routes in parallel during its production build.
+// Wait briefly when another worker is initializing the same SQLite file
+// instead of failing immediately with SQLITE_BUSY / "database is locked".
+db.exec("PRAGMA busy_timeout = 30000;");
+
 db.exec(`
   CREATE TABLE IF NOT EXISTS case_studies (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -32,7 +37,13 @@ db.exec(`
     thumbnail_image TEXT NOT NULL DEFAULT '',
     position INTEGER NOT NULL DEFAULT 0,
     published INTEGER NOT NULL DEFAULT 1,
-    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    meta_title TEXT NOT NULL DEFAULT '',
+    meta_description TEXT NOT NULL DEFAULT '',
+    meta_keywords TEXT NOT NULL DEFAULT '',
+    canonical_url TEXT NOT NULL DEFAULT '',
+    og_image TEXT NOT NULL DEFAULT '',
+    no_index INTEGER NOT NULL DEFAULT 0
   );
 
   CREATE TABLE IF NOT EXISTS insights (
@@ -46,12 +57,24 @@ db.exec(`
     published_at TEXT NOT NULL,
     position INTEGER NOT NULL DEFAULT 0,
     published INTEGER NOT NULL DEFAULT 1,
-    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    meta_title TEXT NOT NULL DEFAULT '',
+    meta_description TEXT NOT NULL DEFAULT '',
+    meta_keywords TEXT NOT NULL DEFAULT '',
+    canonical_url TEXT NOT NULL DEFAULT '',
+    og_image TEXT NOT NULL DEFAULT '',
+    no_index INTEGER NOT NULL DEFAULT 0
   );
 
   CREATE TABLE IF NOT EXISTS settings (
     key TEXT PRIMARY KEY,
     value TEXT NOT NULL
+  );
+
+  CREATE TABLE IF NOT EXISTS admin_recovery_tokens (
+    token_hash TEXT PRIMARY KEY,
+    expires_at INTEGER NOT NULL,
+    used INTEGER NOT NULL DEFAULT 0
   );
 
   CREATE TABLE IF NOT EXISTS submissions (
@@ -142,16 +165,37 @@ db.exec(`
     published INTEGER NOT NULL DEFAULT 1,
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
   );
+
+  CREATE TABLE IF NOT EXISTS about_experiences (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    start_date TEXT NOT NULL DEFAULT '',
+    end_date TEXT NOT NULL DEFAULT '',
+    job_title TEXT NOT NULL DEFAULT '',
+    company_name TEXT NOT NULL DEFAULT '',
+    business_profile TEXT NOT NULL DEFAULT '',
+    description TEXT NOT NULL DEFAULT '',
+    position INTEGER NOT NULL DEFAULT 0,
+    published INTEGER NOT NULL DEFAULT 1,
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+  );
 `);
 
 // Migrate columns added after the tables were first created (CREATE TABLE
 // IF NOT EXISTS above only applies to brand-new databases).
 function addColumnIfMissing(table: string, column: string, ddl: string) {
-  const columns = db.prepare(`PRAGMA table_info(${table})`).all() as {
+  const safeTable = table.replaceAll('"', '""');
+  const columns = db.prepare(`PRAGMA table_info("${safeTable}")`).all() as {
     name: string;
   }[];
   if (!columns.some((c) => c.name === column)) {
-    db.exec(`ALTER TABLE ${table} ADD COLUMN ${ddl}`);
+    try {
+      db.exec(`ALTER TABLE "${safeTable}" ADD COLUMN ${ddl}`);
+    } catch (error) {
+      // Parallel Next.js workers can pass the check before one worker adds
+      // the column. In that case the migration is already complete.
+      const message = error instanceof Error ? error.message : String(error);
+      if (!/duplicate column name/i.test(message)) throw error;
+    }
   }
 }
 addColumnIfMissing("case_studies", "body", "body TEXT NOT NULL DEFAULT ''");
@@ -163,6 +207,14 @@ addColumnIfMissing("case_studies", "metrics", "metrics TEXT NOT NULL DEFAULT '[]
 addColumnIfMissing("case_studies", "assessment", "assessment TEXT NOT NULL DEFAULT '{}'");
 addColumnIfMissing("case_studies", "password_required", "password_required INTEGER NOT NULL DEFAULT 0");
 addColumnIfMissing("case_studies", "password_hashes", "password_hashes TEXT NOT NULL DEFAULT '[]'");
+addColumnIfMissing("case_studies", "author", "author TEXT NOT NULL DEFAULT 'Andrei Stanescu'");
+addColumnIfMissing("case_studies", "published_at", "published_at TEXT NOT NULL DEFAULT ''");
+addColumnIfMissing("case_studies", "meta_title", "meta_title TEXT NOT NULL DEFAULT ''");
+addColumnIfMissing("case_studies", "meta_description", "meta_description TEXT NOT NULL DEFAULT ''");
+addColumnIfMissing("case_studies", "meta_keywords", "meta_keywords TEXT NOT NULL DEFAULT ''");
+addColumnIfMissing("case_studies", "canonical_url", "canonical_url TEXT NOT NULL DEFAULT ''");
+addColumnIfMissing("case_studies", "og_image", "og_image TEXT NOT NULL DEFAULT ''");
+addColumnIfMissing("case_studies", "no_index", "no_index INTEGER NOT NULL DEFAULT 0");
 addColumnIfMissing(
   "case_studies",
   "cover_image",
@@ -190,12 +242,24 @@ addColumnIfMissing(
   "author",
   "author TEXT NOT NULL DEFAULT 'Andrei Stanescu'"
 );
+addColumnIfMissing("insights", "meta_title", "meta_title TEXT NOT NULL DEFAULT ''");
+addColumnIfMissing("insights", "meta_description", "meta_description TEXT NOT NULL DEFAULT ''");
+addColumnIfMissing("insights", "meta_keywords", "meta_keywords TEXT NOT NULL DEFAULT ''");
+addColumnIfMissing("insights", "canonical_url", "canonical_url TEXT NOT NULL DEFAULT ''");
+addColumnIfMissing("insights", "og_image", "og_image TEXT NOT NULL DEFAULT ''");
+addColumnIfMissing("insights", "no_index", "no_index INTEGER NOT NULL DEFAULT 0");
 addColumnIfMissing(
   "pages",
   "show_in_nav",
   "show_in_nav INTEGER NOT NULL DEFAULT 0"
 );
 addColumnIfMissing("pages", "visible", "visible INTEGER NOT NULL DEFAULT 1");
+addColumnIfMissing("pages", "meta_title", "meta_title TEXT NOT NULL DEFAULT ''");
+addColumnIfMissing("pages", "meta_description", "meta_description TEXT NOT NULL DEFAULT ''");
+addColumnIfMissing("pages", "meta_keywords", "meta_keywords TEXT NOT NULL DEFAULT ''");
+addColumnIfMissing("pages", "canonical_url", "canonical_url TEXT NOT NULL DEFAULT ''");
+addColumnIfMissing("pages", "og_image", "og_image TEXT NOT NULL DEFAULT ''");
+addColumnIfMissing("pages", "no_index", "no_index INTEGER NOT NULL DEFAULT 0");
 addColumnIfMissing("service_items", "card_size", "card_size TEXT NOT NULL DEFAULT 'standard'");
 addColumnIfMissing("pages", "nav_label", "nav_label TEXT NOT NULL DEFAULT ''");
 addColumnIfMissing("pages", "position", "position INTEGER NOT NULL DEFAULT 0");
@@ -223,14 +287,94 @@ addColumnIfMissing("homepage_sections", "visible", "visible INTEGER NOT NULL DEF
 addColumnIfMissing("about_sections", "visible", "visible INTEGER NOT NULL DEFAULT 1");
 
 const DEFAULT_SETTINGS: Record<string, string> = {
-  logo_identity: "business",
+  logo_identity: "personal",
   work_outcome_title: "Better systems make better work repeatable.",
   work_outcome_body: "Clarity compounds: decisions become easier, teams move with more confidence and products improve over time.",
   confirmation_title: "Thanks — message received.",
   confirmation_body: "I reply within two working days.",
   contact_email_to: "",
   logo_image: "",
+  about_hero_image: "",
+  about_cv: "",
 };
+
+// A content-only baseline can be committed as data/content-seed.json. This
+// runs before the built-in demo seed and only fills an empty content table;
+// it never overwrites content already created or edited in that deployment.
+// The file is intentionally separate from the SQLite database so credentials,
+// sessions and contact submissions cannot be carried into production.
+type SeedRecord = Record<string, unknown>;
+type SeedPayload = { format?: string; version?: number; caseStudies?: SeedRecord[]; insights?: SeedRecord[] };
+
+function seedContentBaseline() {
+  const seedPath = join(process.cwd(), "data", "content-seed.json");
+  if (!existsSync(seedPath)) return;
+
+  let payload: SeedPayload;
+  try {
+    payload = JSON.parse(readFileSync(seedPath, "utf8")) as SeedPayload;
+  } catch (error) {
+    console.warn("Could not read data/content-seed.json; continuing without content baseline.", error);
+    return;
+  }
+  if (payload.format !== "conscept-content" || payload.version !== 1) return;
+
+  const asText = (record: SeedRecord, key: string, fallback = "") =>
+    typeof record[key] === "string" ? record[key] as string : fallback;
+  const asNumber = (record: SeedRecord, key: string, fallback = 0) =>
+    typeof record[key] === "number" ? Math.round(record[key] as number) : fallback;
+  const asJson = (record: SeedRecord, key: string, fallback: unknown) =>
+    Array.isArray(record[key]) || (record[key] && typeof record[key] === "object")
+      ? JSON.stringify(record[key])
+      : typeof record[key] === "string" ? record[key] : JSON.stringify(fallback);
+
+  const caseStudyCount = db.prepare("SELECT COUNT(*) AS n FROM case_studies").get() as { n: number };
+  if (caseStudyCount.n === 0 && Array.isArray(payload.caseStudies)) {
+    const insert = db.prepare(
+      `INSERT INTO case_studies
+        (slug, eyebrow, title, description, tags, position, published, body,
+         cover_image, thumbnail_image, category, year, outcome_eyebrow,
+         outcome_title, metrics, assessment, password_required, password_hashes)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    );
+    for (const record of payload.caseStudies) {
+      const slug = asText(record, "slug").trim();
+      const title = asText(record, "title").trim();
+      if (!slug || !title) continue;
+      insert.run(
+        slug, asText(record, "eyebrow"), title, asText(record, "description"),
+        asText(record, "tags"), asNumber(record, "position"), asNumber(record, "published", 1),
+        asText(record, "body"), asText(record, "cover_image"), asText(record, "thumbnail_image"),
+        asText(record, "category"), asText(record, "year"), asText(record, "outcome_eyebrow", "OUTCOMES"),
+        asText(record, "outcome_title"), asJson(record, "metrics", []), asJson(record, "assessment", {}),
+        asNumber(record, "password_required"), asJson(record, "password_hashes", [])
+      );
+    }
+  }
+
+  const insightCount = db.prepare("SELECT COUNT(*) AS n FROM insights").get() as { n: number };
+  if (insightCount.n === 0 && Array.isArray(payload.insights)) {
+    const insert = db.prepare(
+      `INSERT INTO insights
+        (slug, title, excerpt, body, published_at, position, published,
+         cover_image, thumbnail_image, category, author, tags)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    );
+    for (const record of payload.insights) {
+      const slug = asText(record, "slug").trim();
+      const title = asText(record, "title").trim();
+      if (!slug || !title) continue;
+      insert.run(
+        slug, title, asText(record, "excerpt"), asText(record, "body"),
+        asText(record, "published_at"), asNumber(record, "position"), asNumber(record, "published", 1),
+        asText(record, "cover_image"), asText(record, "thumbnail_image"), asText(record, "category"),
+        asText(record, "author", "Andrei Stanescu"), asText(record, "tags")
+      );
+    }
+  }
+}
+
+seedContentBaseline();
 
 const getSettingStmt = db.prepare("SELECT value FROM settings WHERE key = ?");
 const insertSettingStmt = db.prepare(
@@ -464,7 +608,15 @@ const SEED_HOMEPAGE_SECTIONS = [
     position: 3,
     fixed: 0,
   },
-];
+  {
+    key: "before_conscept",
+    eyebrow: "Before ConScept",
+    headline: "Experience that shaped how I work.",
+    description: "The roles and environments that taught me to look beyond the immediate problem.",
+    position: 4,
+    fixed: 0,
+  },
+]; 
 const insertSectionStmt = db.prepare(
   `INSERT INTO homepage_sections (key, eyebrow, headline, description, position, fixed)
    VALUES (?, ?, ?, ?, ?, ?)`
@@ -672,6 +824,16 @@ for (const section of SEED_ABOUT_SECTIONS) {
       section.fixed
     );
   }
+}
+if (!getAboutSectionStmt.get("before_conscept")) {
+  insertAboutSectionStmt.run(
+    "before_conscept",
+    "Before ConScept",
+    "Experience that shaped how I work.",
+    "The roles and environments that taught me to look beyond the immediate problem.",
+    4,
+    0
+  );
 }
 
 const SEED_PHILOSOPHY_ITEMS = [

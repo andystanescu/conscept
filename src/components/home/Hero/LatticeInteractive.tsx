@@ -286,6 +286,10 @@ export function LatticeInteractive({ children, mode = "drift" }: { children: Rea
     };
     const start = animationTime();
     let draggedParticle: Particle | null = null;
+    let pendingParticle: Particle | null = null;
+    let pendingPointerId: number | null = null;
+    let pendingStartX = 0;
+    let pendingStartY = 0;
     let dragStartX = 0;
     let dragStartY = 0;
     let maxDragDistance = 0;
@@ -303,6 +307,29 @@ export function LatticeInteractive({ children, mode = "drift" }: { children: Rea
     }
 
     function handlePointerMove(e: PointerEvent) {
+      if (pendingParticle && pendingPointerId === e.pointerId) {
+        const deltaX = e.clientX - pendingStartX;
+        const deltaY = e.clientY - pendingStartY;
+        // On touch, let the browser own vertical gestures. Only turn the
+        // gesture into a lattice drag once it is clearly horizontal.
+        if (Math.hypot(deltaX, deltaY) < 8) return;
+        if (Math.abs(deltaY) >= Math.abs(deltaX)) {
+          pendingParticle = null;
+          pendingPointerId = null;
+          mouseX = -9999;
+          mouseY = -9999;
+          return;
+        }
+        draggedParticle = pendingParticle;
+        pendingParticle = null;
+        pendingPointerId = null;
+        dragStartX = draggedParticle.baseX + draggedParticle.curX;
+        dragStartY = draggedParticle.baseY + draggedParticle.curY;
+        maxDragDistance = 0;
+        container!.setPointerCapture(e.pointerId);
+        container!.classList.add(styles.grabbing);
+        e.preventDefault();
+      }
       const point = toSvgPoint(e.clientX, e.clientY);
       if (!point) return;
       mouseX = point.x;
@@ -320,6 +347,13 @@ export function LatticeInteractive({ children, mode = "drift" }: { children: Rea
       if (!point) return;
       const grabbed = findGrabbableParticle(point.x, point.y);
       if (!grabbed) return;
+      if (e.pointerType === "touch") {
+        pendingParticle = grabbed;
+        pendingPointerId = e.pointerId;
+        pendingStartX = e.clientX;
+        pendingStartY = e.clientY;
+        return;
+      }
       draggedParticle = grabbed;
       mouseX = point.x;
       mouseY = point.y;
@@ -332,6 +366,13 @@ export function LatticeInteractive({ children, mode = "drift" }: { children: Rea
     }
 
     function releaseDrag(e: PointerEvent) {
+      if (pendingPointerId === e.pointerId) {
+        pendingParticle = null;
+        pendingPointerId = null;
+        mouseX = -9999;
+        mouseY = -9999;
+        return;
+      }
       if (!draggedParticle) return;
       aPulseStrength = clamp(maxDragDistance / 120, 0.22, 1);
       aPulseStartedAt = animationTime();

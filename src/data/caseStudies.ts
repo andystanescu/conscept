@@ -23,6 +23,14 @@ export type CaseStudy = {
   assessment: string;
   password_required: number;
   password_hashes: string;
+  author: string;
+  published_at: string;
+  meta_title: string;
+  meta_description: string;
+  meta_keywords: string;
+  canonical_url: string;
+  og_image: string;
+  no_index: number;
 };
 
 export type CaseStudyMetric = { value: string; label: string };

@@ -1,3 +1,4 @@
+import { relativeRedirect } from "@/lib/relativeRedirect";
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { resolveImageField } from "@/lib/uploads";
@@ -12,7 +13,7 @@ export async function POST(request: NextRequest) {
   if (!title || !description) {
     const url = new URL("/admin/approach-steps/new", request.url);
     url.searchParams.set("error", "Title and description are required.");
-    return NextResponse.redirect(url, 303);
+    return relativeRedirect(url.pathname + url.search);
   }
 
   const icon = await resolveImageField(form, "icon", "");
@@ -26,5 +27,5 @@ export async function POST(request: NextRequest) {
      VALUES (?, ?, ?, ?, ?, ?)`
   ).run(title, description, icon, showOnHomepage, maxPosition.max + 1, published);
 
-  return NextResponse.redirect(new URL("/admin/approach-steps", request.url), 303);
+  return relativeRedirect("/admin/approach-steps");
 }

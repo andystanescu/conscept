@@ -9,14 +9,18 @@ import type { CaseStudyAssessment } from "@/data/caseStudyAssessment";
 import { assessmentCriteriaList, generateActivityRecommendations, getPrimaryComplexityDrivers } from "@/data/caseStudyAssessment";
 import styles from "./CaseStudyEditor.module.css";
 import adminStyles from "@/app/admin/(dashboard)/admin.module.css";
+import { dateInputValue } from "@/lib/dateUtils";
+import { MetadataFields } from "@/components/admin/MetadataFields/MetadataFields";
 
 type ServiceOption = { slug: string; title: string };
 type PasswordEntry = { name: string; masked: string };
 type Props = { study: CaseStudy; metrics: CaseStudyMetric[]; assessment: CaseStudyAssessment; services: ServiceOption[]; passwordRequired: boolean; passwordEntries: PasswordEntry[] };
-type Tab = "details" | "outcomes" | "assessment" | "content" | "visibility";
+type Tab = "details" | "outcomes" | "assessment" | "content" | "metadata" | "visibility";
 
 export function CaseStudyEditor({ study, metrics, assessment, services, passwordRequired, passwordEntries }: Props) {
   const [tab, setTab] = useState<Tab>("content");
+  const studyAuthor = "author" in study && typeof study.author === "string" ? study.author : "";
+  const publishedDate = "published_at" in study && typeof study.published_at === "string" ? study.published_at : "";
   const formRef = useRef<HTMLFormElement>(null);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [saveState, setSaveState] = useState<"saved" | "saving" | "error">("saved");
@@ -57,9 +61,9 @@ export function CaseStudyEditor({ study, metrics, assessment, services, password
   return (
     <form ref={formRef} className={adminStyles.form} action={`/api/admin/case-studies/${study.id}`} method="POST" encType="multipart/form-data" onInput={scheduleDraftSave} onChange={scheduleDraftSave}>
       <div className={styles.tabs} role="tablist" aria-label="Case study details">
-        {(["content", "details", "outcomes", "assessment", "visibility"] as const).map((value) => (
+        {(["content", "details", "outcomes", "assessment", "metadata", "visibility"] as const).map((value) => (
           <button key={value} id={`case-study-tab-${value}`} type="button" role="tab" aria-selected={tab === value} aria-controls={`case-study-panel-${value}`} tabIndex={tab === value ? 0 : -1} className={tab === value ? styles.tabActive : styles.tab} onClick={() => setTab(value)}>
-            {value === "details" ? "Details" : value === "outcomes" ? "Outcomes" : value === "assessment" ? "Assessment" : value === "visibility" ? "Visibility" : "Content"}
+            {value === "details" ? "Details" : value === "outcomes" ? "Outcomes" : value === "assessment" ? "Assessment" : value === "metadata" ? "Metadata and SEO" : value === "visibility" ? "Visibility" : "Content"}
           </button>
         ))}
       </div>
@@ -71,6 +75,8 @@ export function CaseStudyEditor({ study, metrics, assessment, services, password
         <Field label="Eyebrow"><input name="eyebrow" defaultValue={study.eyebrow} className={adminStyles.input} /></Field>
         <Field label="Title"><input name="title" defaultValue={study.title} required className={adminStyles.input} /></Field>
         <Field label="Description"><textarea name="description" defaultValue={study.description} required className={adminStyles.textarea} /></Field>
+        <Field label="Author (from Settings)"><input defaultValue={studyAuthor} readOnly className={adminStyles.input} /><small className="body-small">The current author name is applied automatically when this case study is saved.</small></Field>
+        <Field label="Published date"><input type="date" name="published_at" defaultValue={dateInputValue(publishedDate)} className={adminStyles.input} /></Field>
         <TagEditor initialValue={study.tags} onCommit={scheduleDraftSave} />
         <Field label="Cover image (shown at the top of the case study)"><ImageField name="cover_image" currentUrl={study.cover_image} /></Field>
         <Field label="Thumbnail image (shown on cards and listings)"><ImageField name="thumbnail_image" currentUrl={study.thumbnail_image} /></Field>
@@ -94,6 +100,11 @@ export function CaseStudyEditor({ study, metrics, assessment, services, password
       <section id="case-study-panel-content" role="tabpanel" aria-labelledby="case-study-tab-content" hidden={tab !== "content"} className={styles.panel} aria-label="Case study content">
         <p className="body-small">Your changes save automatically as a draft. Use Publish when the case study is ready to go live.</p>
         <div className={`${adminStyles.field} ${adminStyles.fieldWide}`}><span className="label-small" style={{ color: "var(--text-secondary)" }}>Full write-up</span><RichTextEditor name="body" defaultValue={study.body} onContentChange={scheduleDraftSave} /></div>
+      </section>
+
+      <section id="case-study-panel-metadata" role="tabpanel" aria-labelledby="case-study-tab-metadata" hidden={tab !== "metadata"} className={styles.panel} aria-label="Case study metadata and SEO">
+        <div className={styles.sectionIntro}><span className="label-eyebrow">Metadata and SEO</span><p className="body-default">Control how this case study appears in search results and when it is shared.</p></div>
+        <MetadataFields values={study} />
       </section>
 
       <section id="case-study-panel-visibility" role="tabpanel" aria-labelledby="case-study-tab-visibility" hidden={tab !== "visibility"} className={styles.panel} aria-label="Case study visibility">

@@ -99,7 +99,7 @@ export function NavClient({ links, logoIdentity }: NavClientProps) {
       <header
         className={`${styles.navOuter} ${scrolled ? styles.scrolled : ""}`}
       >
-        <div className={`container ${styles.nav}`}>
+        <div className={`container ${styles.nav} ${logoIdentity === "personal" ? styles.personal : ""}`}>
           <Link href="/" aria-label="ConScept home" onClick={closeMenu}>
             <Logo variant="compact" identity={logoIdentity} />
           </Link>

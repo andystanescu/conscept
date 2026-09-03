@@ -22,9 +22,9 @@
   padding-block: var(--space-1200);
 }
 
-.heroCopy h1 { max-width: 620px; }
+.heroCopy h1 { max-width: 60vw; }
 
-.heroDescription { max-width: 480px; }
+.heroDescription { max-width: 60vw; }
 
 .heroDescription :global(.content) { max-width: none; }
 

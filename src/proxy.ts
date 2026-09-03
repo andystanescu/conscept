@@ -15,6 +15,8 @@ const PUBLIC_PATHS = new Set([
   "/api/admin/login",
   "/api/admin/setup",
   "/api/admin/recover",
+  "/api/admin/recovery-request",
+  "/api/admin/reset",
 ]);
 
 export function proxy(request: NextRequest) {

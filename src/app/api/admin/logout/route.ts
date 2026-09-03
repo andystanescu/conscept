@@ -1,8 +1,9 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { SESSION_COOKIE_NAME } from "@/lib/auth";
+import { relativeRedirect } from "@/lib/relativeRedirect";
 
 export async function POST(request: NextRequest) {
-  const response = NextResponse.redirect(new URL("/admin/login", request.url), 303);
+  const response = relativeRedirect("/admin/login");
   response.cookies.delete(SESSION_COOKIE_NAME);
   return response;
 }

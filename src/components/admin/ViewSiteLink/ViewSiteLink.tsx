@@ -22,8 +22,8 @@ export function ViewSiteLink() {
   }, []);
 
   return (
-    <a href={href} target="_blank" rel="noopener noreferrer" className={styles.viewSiteLink}>
-      View site ↗
+    <a href={href} className={styles.viewSiteLink}>
+      View site
     </a>
   );
 }

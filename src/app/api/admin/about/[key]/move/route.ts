@@ -1,3 +1,4 @@
+import { relativeRedirect } from "@/lib/relativeRedirect";
 import { NextRequest, NextResponse } from "next/server";
 import { moveSectionPosition } from "@/lib/about";
 
@@ -13,5 +14,5 @@ export async function POST(
     moveSectionPosition(key, direction);
   }
 
-  return NextResponse.redirect(new URL("/admin/about", request.url), 303);
+  return relativeRedirect("/admin/about");
 }

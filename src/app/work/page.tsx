@@ -8,10 +8,17 @@ import { MoreWorkGrid } from "@/components/work/MoreWorkGrid/MoreWorkGrid";
 import { FeaturedCaseStudyCard } from "@/components/work/FeaturedCaseStudyCard/FeaturedCaseStudyCard";
 import { getCaseStudies } from "@/data/caseStudies";
 import { getPublishedPage } from "@/lib/pages";
+import { pageMetadata } from "@/lib/seo";
+import type { Metadata } from "next";
 import { getSettings } from "@/lib/settings";
 import styles from "./work.module.css";
 
 export const dynamic = "force-dynamic";
+
+export function generateMetadata(): Metadata {
+  const page = getPublishedPage("work");
+  return page ? pageMetadata(page, "/work") : {};
+}
 
 export default function WorkPage() {
   const page = getPublishedPage("work");
@@ -34,7 +41,7 @@ export default function WorkPage() {
             Case studies are on their way — check back soon.
           </p>
         ) : (
-          <FeaturedCaseStudyCard slug={featured.slug} title={featured.title} description={featured.description} thumbnail={featured.thumbnail_image} passwordRequired={Boolean(featured.password_required)} />
+          <FeaturedCaseStudyCard slug={featured.slug} title={featured.title} description={featured.description} thumbnail={featured.thumbnail_image} passwordRequired={Boolean(featured.password_required)} category={featured.category} year={featured.year} />
         )}
         <MoreWorkGrid
           totalStudies={CASE_STUDIES.length}

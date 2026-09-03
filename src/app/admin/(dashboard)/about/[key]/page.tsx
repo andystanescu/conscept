@@ -1,5 +1,7 @@
 import { notFound } from "next/navigation";
 import { getSection } from "@/lib/about";
+import { getSettings } from "@/lib/settings";
+import { ImageField } from "@/components/admin/ImageField/ImageField";
 import styles from "../../admin.module.css";
 
 export const dynamic = "force-dynamic";
@@ -22,6 +24,7 @@ export default async function EditAboutSectionPage({
   const { key } = await params;
   const { error } = await searchParams;
   const section = getSection(key);
+  const settings = getSettings();
 
   if (!section) {
     notFound();
@@ -35,6 +38,7 @@ export default async function EditAboutSectionPage({
         className={styles.form}
         action={`/api/admin/about/${section.key}`}
         method="POST"
+        encType="multipart/form-data"
       >
         <label className={styles.field}>
           <span className="label-small" style={{ color: "var(--text-secondary)" }}>
@@ -47,6 +51,18 @@ export default async function EditAboutSectionPage({
             className={styles.input}
           />
         </label>
+
+        {section.key === "hero" && (
+          <div className={styles.field}>
+            <span className="label-small" style={{ color: "var(--text-secondary)" }}>
+              Personal About image
+            </span>
+            <ImageField name="about_hero_image" currentUrl={settings.about_hero_image || undefined} />
+            <span className="body-small" style={{ color: "var(--text-tertiary)" }}>
+              Used beside the copy in Personal mode. If no image is uploaded, the personal logo is shown instead.
+            </span>
+          </div>
+        )}
 
         <label className={styles.field}>
           <span className="label-small" style={{ color: "var(--text-secondary)" }}>

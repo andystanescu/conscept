@@ -39,6 +39,16 @@
   color: var(--text-primary);
 }
 
+@media (min-width: 901px) {
+  .nav.personal { position: relative; }
+  .nav.personal .links {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+  .nav.personal .right { margin-left: auto; }
+}
+
 .links a {
   padding-bottom: var(--space-100);
   border-bottom: 2px solid transparent;

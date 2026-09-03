@@ -2,8 +2,8 @@
 .hero { min-height: 520px; background: var(--bg-canvas); }
 .heroInner { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(300px, .9fr); align-items: center; min-height: 520px; }
 .heroCopy { display: flex; flex-direction: column; gap: var(--space-300); padding-block: var(--space-1200); }
-.heroCopy h1 { max-width: 650px; }
-.heroDescription { max-width: 520px; }
+.heroCopy h1 { max-width: 60vw; }
+.heroDescription { max-width: 60vw; }
 .heroDescription :global(.content) { max-width: none; }
 .heroLattice { display: flex; justify-content: center; align-items: center; }
 .principle { padding-block: var(--space-800); background: var(--bg-deep); color: #fff; }

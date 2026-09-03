@@ -34,6 +34,27 @@ export default async function AdminSettingsPage() {
         encType="multipart/form-data"
       >
         <label className={styles.field}>
+          <span className="label-small" style={{ color: "var(--text-secondary)" }}>Author name</span>
+          <input type="text" name="author_name" defaultValue={settings.author_name} placeholder="Andrei Stanescu" className={styles.input} />
+          <span className="body-small" style={{ color: "var(--text-tertiary)" }}>Automatically applied when articles and case studies are saved.</span>
+        </label>
+
+        <label className={styles.field}>
+          <span className="label-small" style={{ color: "var(--text-secondary)" }}>
+            Personal About CV (PDF)
+          </span>
+          <input type="file" name="about_cv" accept="application/pdf,.pdf" className={styles.input} />
+          {settings.about_cv && (
+            <a href={settings.about_cv} target="_blank" rel="noreferrer" className="body-small">
+              View current CV
+            </a>
+          )}
+          <span className="body-small" style={{ color: "var(--text-tertiary)" }}>
+            Downloaded by the Download CV button on the Personal About page. Leave empty to keep the current file.
+          </span>
+        </label>
+
+        <label className={styles.field}>
           <span className="label-small" style={{ color: "var(--text-secondary)" }}>
             Contact form: send submissions to
           </span>

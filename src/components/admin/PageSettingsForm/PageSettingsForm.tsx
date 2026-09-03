@@ -2,6 +2,8 @@ import type { Page } from "@/lib/pages";
 import { RichTextEditor } from "@/components/admin/RichTextEditor/RichTextEditor";
 import { getSettings } from "@/lib/settings";
 import styles from "@/app/admin/(dashboard)/admin.module.css";
+import { MetadataFields } from "@/components/admin/MetadataFields/MetadataFields";
+import { AdminContentTabs } from "@/components/admin/AdminContentTabs/AdminContentTabs";
 
 type PageSettingsFormProps = {
   page: Page;
@@ -31,6 +33,9 @@ export function PageSettingsForm({ page, error, redirect, note }: PageSettingsFo
       {error && <p style={{ color: "var(--border-error)" }}>{error}</p>}
       <form className={styles.form} action={`/api/admin/pages/${page.slug}`} method="POST">
         <input type="hidden" name="redirect" value={redirect} />
+
+        <AdminContentTabs tabs={[
+          { id: "details", label: "Details", content: <div className={styles.formSection}>
 
         <label className={styles.field}>
           <span className="label-small" style={{ color: "var(--text-secondary)" }}>
@@ -131,6 +136,10 @@ export function PageSettingsForm({ page, error, redirect, note }: PageSettingsFo
             </>}
           </>
         )}
+
+        </div> },
+          { id: "metadata", label: "Metadata and SEO", content: <div className={styles.field}><span className="label-eyebrow">Metadata and SEO</span><MetadataFields values={page} /></div> },
+        ]} />
 
         <div className={styles.formActions}>
           <button type="submit" className={styles.submit}>

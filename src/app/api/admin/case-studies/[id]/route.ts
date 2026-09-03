@@ -1,10 +1,12 @@
+import { relativeRedirect } from "@/lib/relativeRedirect";
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import type { CaseStudy } from "@/data/caseStudies";
 import { resolveImageField } from "@/lib/uploads";
 import { applyHeadingAccents } from "@/lib/headingAccents";
 import { assessmentCriteriaList, getPrimaryComplexityDrivers } from "@/data/caseStudyAssessment";
 import bcrypt from "bcryptjs";
+import { getSettings } from "@/lib/settings";
+import { dateInputValue } from "@/lib/dateUtils";
 
 export async function POST(
   request: NextRequest,
@@ -18,8 +20,16 @@ export async function POST(
   const year = String(form.get("year") ?? "").trim();
   const title = String(form.get("title") ?? "").trim();
   const description = String(form.get("description") ?? "").trim();
+  const publishedAt = dateInputValue(String(form.get("published_at") ?? "").trim());
+  const author = getSettings().author_name;
   const tags = String(form.get("tags") ?? "").trim();
   const body = applyHeadingAccents(String(form.get("body") ?? "").trim());
+  const metaTitle = String(form.get("meta_title") ?? "").trim();
+  const metaDescription = String(form.get("meta_description") ?? "").trim();
+  const metaKeywords = String(form.get("meta_keywords") ?? "").trim();
+  const canonicalUrl = String(form.get("canonical_url") ?? "").trim();
+  const ogImage = String(form.get("og_image") ?? "").trim();
+  const noIndex = form.get("no_index") === "on" ? 1 : 0;
   const intent = String(form.get("intent") ?? "publish");
   const passwordRequired = form.get("password_required") === "on" ? 1 : 0;
   const rawPasswordAdditions = String(form.get("password_add") ?? "");
@@ -48,12 +58,18 @@ export async function POST(
     }
     const url = new URL(`/admin/case-studies/${id}`, request.url);
     url.searchParams.set("error", "Slug, title, and description are required.");
-    return NextResponse.redirect(url, 303);
+    return relativeRedirect(url.pathname + url.search);
   }
 
   const existing = db
-    .prepare("SELECT cover_image, thumbnail_image, published, password_hashes FROM case_studies WHERE id = ?")
-    .get(id) as Pick<CaseStudy, "cover_image" | "thumbnail_image" | "published" | "password_hashes"> | undefined;
+    .prepare("SELECT cover_image, thumbnail_image, published, password_hashes, published_at FROM case_studies WHERE id = ?")
+    .get(id) as {
+      cover_image: string;
+      thumbnail_image: string;
+      published: number;
+      password_hashes: string;
+      published_at: string;
+    } | undefined;
   const published = intent === "publish" ? 1 : Number(existing?.published ?? 0);
 
   const coverImage = await resolveImageField(
@@ -84,7 +100,7 @@ export async function POST(
   try {
     db.prepare(
       `UPDATE case_studies
-       SET slug = ?, eyebrow = ?, category = ?, year = ?, title = ?, description = ?, tags = ?, body = ?, cover_image = ?, thumbnail_image = ?, outcome_eyebrow = ?, outcome_title = ?, metrics = ?, assessment = ?, password_required = ?, password_hashes = ?, published = ?
+       SET slug = ?, eyebrow = ?, category = ?, year = ?, title = ?, description = ?, tags = ?, body = ?, cover_image = ?, thumbnail_image = ?, outcome_eyebrow = ?, outcome_title = ?, metrics = ?, assessment = ?, password_required = ?, password_hashes = ?, published = ?, author = ?, published_at = ?, meta_title = ?, meta_description = ?, meta_keywords = ?, canonical_url = ?, og_image = ?, no_index = ?
        WHERE id = ?`
     ).run(
       slug,
@@ -104,17 +120,25 @@ export async function POST(
       passwordRequired,
       passwordHashes,
       published,
+      author,
+      publishedAt || dateInputValue(existing?.published_at ?? ""),
+      metaTitle,
+      metaDescription,
+      metaKeywords,
+      canonicalUrl,
+      ogImage,
+      noIndex,
       id
     );
   } catch {
     const url = new URL(`/admin/case-studies/${id}`, request.url);
     url.searchParams.set("error", `A case study with slug "${slug}" already exists.`);
-    return NextResponse.redirect(url, 303);
+    return relativeRedirect(url.pathname + url.search);
   }
 
   if (intent === "draft") {
     return NextResponse.json({ saved: true, published: Boolean(published) });
   }
 
-  return NextResponse.redirect(new URL("/admin/case-studies", request.url), 303);
+  return relativeRedirect("/admin/case-studies");
 }

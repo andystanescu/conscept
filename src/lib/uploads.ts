@@ -3,7 +3,12 @@ import { mkdir, writeFile } from "fs/promises";
 import { existsSync } from "fs";
 import { join } from "path";
 
-const uploadsDir = join(process.cwd(), "public", "uploads");
+// Keep this configurable for hosts that provide a persistent writable
+// directory outside the build output. The route that serves uploads uses the
+// same resolver, so saving and reading always target the same location.
+export function getUploadsDir(): string {
+  return process.env.UPLOADS_DIR?.trim() || join(process.cwd(), "public", "uploads");
+}
 
 const ALLOWED_TYPES: Record<string, string> = {
   "image/jpeg": "jpg",
@@ -33,16 +38,47 @@ export async function saveUploadedImage(file: File): Promise<string> {
     throw new UploadError("Image is too large — 8MB max.");
   }
 
-  if (!existsSync(uploadsDir)) {
+  const uploadsDir = getUploadsDir();
+  if (!existsSync(/*turbopackIgnore: true*/ uploadsDir)) {
     await mkdir(uploadsDir, { recursive: true });
   }
 
   const ext = ALLOWED_TYPES[file.type];
   const filename = `${randomUUID()}.${ext}`;
   const bytes = Buffer.from(await file.arrayBuffer());
-  await writeFile(join(uploadsDir, filename), bytes);
+  await writeFile(join(/*turbopackIgnore: true*/ uploadsDir, filename), bytes);
 
   return `/uploads/${filename}`;
+}
+
+export async function saveUploadedPdf(file: File): Promise<string> {
+  if (file.type !== "application/pdf") {
+    throw new UploadError("Unsupported file type. Upload a PDF.");
+  }
+  if (file.size > MAX_BYTES) {
+    throw new UploadError("PDF is too large — 8MB max.");
+  }
+
+  const uploadsDir = getUploadsDir();
+  if (!existsSync(/*turbopackIgnore: true*/ uploadsDir)) {
+    await mkdir(uploadsDir, { recursive: true });
+  }
+  const filename = `${randomUUID()}.pdf`;
+  const bytes = Buffer.from(await file.arrayBuffer());
+  await writeFile(join(/*turbopackIgnore: true*/ uploadsDir, filename), bytes);
+  return `/uploads/${filename}`;
+}
+
+export async function resolvePdfField(
+  form: FormData,
+  field: string,
+  existingUrl: string
+): Promise<string> {
+  const value = form.get(field);
+  if (value instanceof File && value.size > 0) {
+    return saveUploadedPdf(value);
+  }
+  return existingUrl;
 }
 
 // Resolves a cover/thumbnail form field to a URL: uploads a newly chosen

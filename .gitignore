@@ -51,6 +51,9 @@ yarn-error.log*
 # user-uploaded images (persistent server data, not source)
 /public/uploads/*
 !/public/uploads/.gitkeep
+# These case-study comparison assets are part of the deployed public experience.
+!/public/uploads/legacy-dashboard-before.png
+!/public/uploads/legacy-dashboard-after.png
 
 # typescript
 *.tsbuildinfo

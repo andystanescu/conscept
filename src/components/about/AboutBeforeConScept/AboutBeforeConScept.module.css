@@ -1,0 +1,16 @@
+.section { padding-block: var(--space-1200); }
+.section h2 { max-width: 760px; margin-top: var(--space-200); }
+.intro { max-width: 680px; margin-top: var(--space-300); color: var(--text-secondary); }
+.timeline { margin-top: var(--space-800); }
+.card { display: grid; grid-template-columns: minmax(150px, 0.8fr) minmax(220px, 1.2fr) minmax(260px, 2fr); align-items: start; gap: 40px; min-width: 0; padding: 24px 0; border-top: 1px solid var(--border-default); }
+.dates { min-width: 0; color: var(--text-secondary); font-size: 13px; font-weight: 500; }
+.identity { display: flex; min-width: 0; flex-direction: column; gap: 6px; }
+.identity h3 { color: var(--text-primary); font-size: 18px; font-weight: 600; }
+.company { color: var(--text-secondary); font-size: 13px; font-weight: 500; }
+.description { color: var(--text-secondary); font-size: 15px; line-height: 1.5; }
+@media (max-width: 700px) {
+  .intro { width: 100%; max-width: 100%; }
+  .card { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  .dates { min-width: 0; white-space: normal; }
+  .identity, .description { grid-column: 1; }
+}

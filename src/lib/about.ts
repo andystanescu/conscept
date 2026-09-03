@@ -96,3 +96,27 @@ export function getAllHighlightItemsAdmin(): AboutItem[] {
     .prepare("SELECT * FROM about_highlight_items ORDER BY position ASC")
     .all() as AboutItem[];
 }
+
+export type AboutExperience = {
+  id: number;
+  start_date: string;
+  end_date: string;
+  job_title: string;
+  company_name: string;
+  business_profile: string;
+  description: string;
+  position: number;
+  published: number;
+};
+
+export function getExperiences(): AboutExperience[] {
+  return db
+    .prepare("SELECT * FROM about_experiences WHERE published = 1 ORDER BY position ASC, id ASC")
+    .all() as AboutExperience[];
+}
+
+export function getAllExperiencesAdmin(): AboutExperience[] {
+  return db
+    .prepare("SELECT * FROM about_experiences ORDER BY position ASC, id ASC")
+    .all() as AboutExperience[];
+}

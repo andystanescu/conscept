@@ -5,11 +5,6 @@
   color: var(--text-primary);
 }
 
-.fullLogo {
-  display: block;
-  width: auto;
-}
-
 .personal .wordmark {
   transition: color 0.15s ease;
 }

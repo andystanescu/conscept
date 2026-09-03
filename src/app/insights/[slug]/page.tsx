@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 import Link from "next/link";
 import { Nav } from "@/components/Nav/Nav";
 import { Footer } from "@/components/Footer/Footer";
@@ -11,8 +12,17 @@ import { calculateReadingTime } from "@/lib/readingTime";
 import { ShareArticle } from "@/components/ShareArticle/ShareArticle";
 import { BackButton } from "@/components/BackButton/BackButton";
 import styles from "./insight.module.css";
+import { contentMetadata, absoluteUrl } from "@/lib/seo";
+import { displayDate } from "@/lib/dateUtils";
 
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const insight = getInsightBySlug(slug);
+  if (!insight) return {};
+  return contentMetadata({ title: insight.meta_title || `${insight.title} | Andrei Stanescu`, description: insight.meta_description || insight.excerpt, path: `/insights/${encodeURIComponent(insight.slug)}`, image: insight.og_image || insight.thumbnail_image || insight.cover_image, keywords: insight.meta_keywords, canonicalUrl: insight.canonical_url || undefined, noIndex: Boolean(insight.no_index) });
+}
 
 export default async function InsightDetailPage({
   params,
@@ -32,6 +42,11 @@ export default async function InsightDetailPage({
 
   return (
     <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
+        "@context": "https://schema.org", "@type": "Article", headline: insight.title,
+        description: insight.excerpt, datePublished: insight.published_at, author: { "@type": "Person", name: insight.author },
+        mainEntityOfPage: absoluteUrl(`/insights/${encodeURIComponent(insight.slug)}`), image: insight.cover_image ? absoluteUrl(insight.cover_image) : undefined,
+      }) }} />
       <Nav />
       <main className={styles.main}>
         <section className={styles.hero}>
@@ -59,7 +74,7 @@ export default async function InsightDetailPage({
                 {insight.author}
               </p>
               <p className="body-small" style={{ color: "var(--text-tertiary)" }}>
-                {insight.published_at} &nbsp;•&nbsp; {readingMinutes} min read
+                {displayDate(insight.published_at)} &nbsp;•&nbsp; {readingMinutes} min read
               </p>
               {insight.tags && (
                 <p className={styles.tags}>{insight.tags}</p>

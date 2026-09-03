@@ -45,12 +45,19 @@
 }
 
 .featured:hover,
+.featured:focus,
 .featured:focus-visible {
   border-color: var(--accent-foundation);
   box-shadow:
     0 12px 24px rgba(17, 22, 31, 0.1),
     0 4px 8px rgba(17, 22, 31, 0.12);
   transform: translateY(-2px);
+}
+
+.featured:focus, .featured:focus-visible {
+  outline: 2px solid #e8441c;
+  outline-offset: 2px;
+  box-shadow: none;
 }
 
 .featured:active {

@@ -1,5 +1,9 @@
+import { relativeRedirect } from "@/lib/relativeRedirect";
 import { NextRequest, NextResponse } from "next/server";
 import { getSection, updateSection } from "@/lib/about";
+import { db } from "@/lib/db";
+import { updateSettings } from "@/lib/settings";
+import { resolveImageField } from "@/lib/uploads";
 
 export async function POST(
   request: NextRequest,
@@ -17,13 +21,25 @@ export async function POST(
   const description = String(form.get("description") ?? "").trim();
   const visible = form.get("visible") === "on";
 
+  const existingHeroImage = db
+    .prepare("SELECT value FROM settings WHERE key = 'about_hero_image'")
+    .get() as { value: string } | undefined;
+  const aboutHeroImage = await resolveImageField(
+    form,
+    "about_hero_image",
+    existingHeroImage?.value ?? ""
+  );
+
   if (!headline) {
     const url = new URL(`/admin/about/${key}`, request.url);
     url.searchParams.set("error", "Headline is required.");
-    return NextResponse.redirect(url, 303);
+    return relativeRedirect(url.pathname + url.search);
   }
 
   updateSection(key, { eyebrow, headline, description, visible });
+  if (key === "hero") {
+    updateSettings({ about_hero_image: aboutHeroImage });
+  }
 
-  return NextResponse.redirect(new URL("/admin/about", request.url), 303);
+  return relativeRedirect("/admin/about");
 }

@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { Nav } from "@/components/Nav/Nav";
@@ -13,13 +14,27 @@ import { BackButton } from "@/components/BackButton/BackButton";
 import styles from "./case-study.module.css";
 import { CaseStudyPasswordGate } from "@/components/CaseStudyPasswordGate/CaseStudyPasswordGate";
 import { caseStudyAccessCookieName, verifyCaseStudyAccessToken } from "@/lib/caseStudyAccess";
+import { contentMetadata, absoluteUrl } from "@/lib/seo";
+import { getSettings } from "@/lib/settings";
+import { displayDate } from "@/lib/dateUtils";
 
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const study = getCaseStudyBySlug(slug);
+  if (!study) return {};
+  return contentMetadata({ title: study.meta_title || `${study.title} | Andrei Stanescu`, description: study.meta_description || study.description, path: `/work/${encodeURIComponent(study.slug)}`, image: study.og_image || study.thumbnail_image || study.cover_image, keywords: study.meta_keywords, canonicalUrl: study.canonical_url || undefined, noIndex: Boolean(study.password_required) || Boolean(study.no_index) });
+}
 
 export default async function CaseStudyDetailPage({ params, searchParams }: { params: Promise<{ slug: string }>; searchParams?: Promise<{ accessError?: string }> }) {
   const { slug } = await params;
   const study = getCaseStudyBySlug(slug);
   if (!study) notFound();
+  const authorName = getSettings().author_name;
+  const rawPublishedAt = "published_at" in study && typeof study.published_at === "string" ? study.published_at : "";
+  const publishedAt = rawPublishedAt ? displayDate(rawPublishedAt) : "";
+  const metadata = [study.category, study.year, authorName, publishedAt].filter(Boolean).join("  ·  ");
   let passwordHashes: string[] = [];
   try { const parsed = JSON.parse(study.password_hashes || "[]"); passwordHashes = Array.isArray(parsed) ? parsed.map((value) => typeof value === "string" ? value : value && typeof value === "object" && typeof value.hash === "string" ? value.hash : null).filter((value): value is string => Boolean(value)) : []; } catch { passwordHashes = []; }
   const cookieStore = await cookies();
@@ -54,6 +69,10 @@ export default async function CaseStudyDetailPage({ params, searchParams }: { pa
   const assessmentToc = hasAssessment ? [{ id: "assessment-overview", text: "Assessment" }, { id: "complexity-profile", text: "Complexity profile" }, { id: "likely-engagement", text: "Likely engagement" }] : [];
 
   return <>
+    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
+      "@context": "https://schema.org", "@type": "CreativeWork", name: study.title, description: study.description,
+      url: absoluteUrl(`/work/${encodeURIComponent(study.slug)}`), image: study.cover_image ? absoluteUrl(study.cover_image) : undefined,
+    }) }} />
     <Nav />
     <main className={styles.main}>
       <section className={styles.hero}>
@@ -63,7 +82,7 @@ export default async function CaseStudyDetailPage({ params, searchParams }: { pa
           <p className="label-eyebrow" style={{ color: "var(--text-accent)" }}>{study.category || study.eyebrow || "CASE STUDY"}</p>
           <h1 className="display-small">{study.title}</h1>
           <p className="body-large" style={{ color: "var(--text-secondary)" }}>{study.description}</p>
-          {(study.category || study.year) && <p className={styles.meta}>{study.category}{study.category && study.year ? "  ·  " : ""}{study.year}</p>}
+          {metadata && <p className={styles.meta}>{metadata}</p>}
         </div>
         {study.cover_image && <div className={styles.heroImage}><img src={study.cover_image} alt="" /></div>}
       </section>

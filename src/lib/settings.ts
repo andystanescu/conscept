@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 
 export type SettingsMap = {
+  author_name: string;
   logo_identity: "business" | "personal";
   work_outcome_title: string;
   work_outcome_body: string;
@@ -29,9 +30,12 @@ export type SettingsMap = {
   contact_email_to: string;
   logo_image: string;
   logo_image_footer: string;
+  about_hero_image: string;
+  about_cv: string;
 };
 
 const KEYS: (keyof SettingsMap)[] = [
+  "author_name",
   "logo_identity",
   "work_outcome_title",
   "work_outcome_body",
@@ -60,6 +64,8 @@ const KEYS: (keyof SettingsMap)[] = [
   "contact_email_to",
   "logo_image",
   "logo_image_footer",
+  "about_hero_image",
+  "about_cv",
 ];
 
 export function getSettings(): SettingsMap {
@@ -69,6 +75,7 @@ export function getSettings(): SettingsMap {
   }[];
   const map = Object.fromEntries(rows.map((r) => [r.key, r.value]));
   return {
+    author_name: map.author_name ?? "Andrei Stanescu",
     logo_identity: map.logo_identity === "personal" ? "personal" : "business",
     work_outcome_title: map.work_outcome_title ?? "Better systems make better work repeatable.",
     work_outcome_body: map.work_outcome_body ?? "Clarity compounds: decisions become easier, teams move with more confidence and products improve over time.",
@@ -99,6 +106,8 @@ export function getSettings(): SettingsMap {
     // Falls back to the header logo so existing single-logo setups don't
     // lose their footer logo the moment this field exists but is unset.
     logo_image_footer: map.logo_image_footer || map.logo_image || "",
+    about_hero_image: map.about_hero_image ?? "",
+    about_cv: map.about_cv ?? "",
   };
 }
 

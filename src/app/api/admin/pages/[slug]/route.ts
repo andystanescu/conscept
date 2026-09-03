@@ -1,3 +1,4 @@
+import { relativeRedirect } from "@/lib/relativeRedirect";
 import { NextRequest, NextResponse } from "next/server";
 import { getPage, updatePage } from "@/lib/pages";
 import { applyHeadingAccents } from "@/lib/headingAccents";
@@ -20,6 +21,12 @@ export async function POST(
   const showInNav = form.get("show_in_nav") === "on";
   const visible = slug === "home" ? true : form.get("visible") === "on";
   const navLabel = String(form.get("nav_label") ?? "").trim();
+  const metaTitle = String(form.get("meta_title") ?? "").trim();
+  const metaDescription = String(form.get("meta_description") ?? "").trim();
+  const metaKeywords = String(form.get("meta_keywords") ?? "").trim();
+  const canonicalUrl = String(form.get("canonical_url") ?? "").trim();
+  const ogImage = String(form.get("og_image") ?? "").trim();
+  const noIndex = form.get("no_index") === "on";
   // Pages with their own dedicated admin section (e.g. Services, About) embed
   // this same form as a "Page settings" tab there — this sends the redirect
   // back to that tab instead of the generic /admin/pages list.
@@ -28,10 +35,10 @@ export async function POST(
   if (!title) {
     const url = new URL(`/admin/pages/${slug}`, request.url);
     url.searchParams.set("error", "Title is required.");
-    return NextResponse.redirect(url, 303);
+    return relativeRedirect(url.pathname + url.search);
   }
 
-  updatePage(slug, { eyebrow, title, body, showInNav, navLabel, visible });
+  updatePage(slug, { eyebrow, title, body, showInNav, navLabel, visible, metaTitle, metaDescription, metaKeywords, canonicalUrl, ogImage, noIndex });
   if (slug === "work") {
     updateSettings({
       work_outcome_title: String(form.get("work_outcome_title") ?? "").trim(),
@@ -63,5 +70,5 @@ export async function POST(
     });
   }
 
-  return NextResponse.redirect(new URL(redirectTo, request.url), 303);
+  return relativeRedirect(redirectTo);
 }
