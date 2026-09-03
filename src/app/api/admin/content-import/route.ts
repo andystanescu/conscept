@@ -32,8 +32,18 @@ export async function POST(request: NextRequest) {
       caseStudies?: ContentRecord[];
       insights?: ContentRecord[];
       pages?: ContentRecord[];
+      pageConfiguration?: ContentRecord[];
       experiences?: ContentRecord[];
       assets?: { filename?: string; content?: string }[];
+      configuration?: {
+        settings?: ContentRecord[];
+        homepageSections?: ContentRecord[];
+        services?: ContentRecord[];
+        approachSteps?: ContentRecord[];
+        aboutSections?: ContentRecord[];
+        aboutPhilosophyItems?: ContentRecord[];
+        aboutHighlightItems?: ContentRecord[];
+      };
     };
     if (payload.format !== "conscept-content" || payload.version !== 1) {
       return NextResponse.json({ error: "This is not a compatible ConScept content export." }, { status: 400 });
@@ -41,8 +51,13 @@ export async function POST(request: NextRequest) {
 
     const caseStudies = Array.isArray(payload.caseStudies) ? payload.caseStudies : [];
     const insights = Array.isArray(payload.insights) ? payload.insights : [];
-    const pages = Array.isArray(payload.pages) ? payload.pages : [];
+    const pages = Array.isArray(payload.pages)
+      ? payload.pages
+      : Array.isArray(payload.pageConfiguration)
+        ? payload.pageConfiguration
+        : [];
     const experiences = Array.isArray(payload.experiences) ? payload.experiences : [];
+    const configuration = payload.configuration ?? {};
 
     if (Array.isArray(payload.assets)) {
       const uploadsDir = getUploadsDir();
@@ -56,6 +71,69 @@ export async function POST(request: NextRequest) {
 
     db.exec("BEGIN");
     try {
+      const settings = Array.isArray(configuration.settings) ? configuration.settings : [];
+      const saveSetting = db.prepare("INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value");
+      for (const record of settings) {
+        const key = text(record, "key").trim();
+        if (key) saveSetting.run(key, text(record, "value"));
+      }
+
+      const homepageSections = Array.isArray(configuration.homepageSections) ? configuration.homepageSections : [];
+      const saveHomepageSection = db.prepare(`INSERT OR REPLACE INTO homepage_sections
+        (key, eyebrow, headline, description, position, fixed, cta_primary_label,
+         cta_primary_href, cta_secondary_label, cta_secondary_href, visible)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`);
+      for (const record of homepageSections) {
+        const key = text(record, "key").trim();
+        if (key) saveHomepageSection.run(key, text(record, "eyebrow"), text(record, "headline"), text(record, "description"), integer(record, "position"), integer(record, "fixed"), text(record, "cta_primary_label"), text(record, "cta_primary_href"), text(record, "cta_secondary_label"), text(record, "cta_secondary_href"), integer(record, "visible", 1));
+      }
+
+      const services = Array.isArray(configuration.services) ? configuration.services : [];
+      const saveService = db.prepare(`INSERT OR REPLACE INTO service_items
+        (id, slug, title, description, icon, body, show_on_homepage, position,
+         published, card_size)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`);
+      for (const record of services) {
+        const slug = text(record, "slug").trim();
+        if (slug) saveService.run(integer(record, "id"), slug, text(record, "title"), text(record, "description"), text(record, "icon"), text(record, "body"), integer(record, "show_on_homepage"), integer(record, "position"), integer(record, "published", 1), text(record, "card_size", "standard"));
+      }
+
+      const approachSteps = Array.isArray(configuration.approachSteps) ? configuration.approachSteps : [];
+      const saveApproachStep = db.prepare(`INSERT OR REPLACE INTO approach_steps
+        (id, title, description, icon, show_on_homepage, position, published)
+        VALUES (?, ?, ?, ?, ?, ?, ?)`);
+      for (const record of approachSteps) {
+        const title = text(record, "title").trim();
+        if (title) saveApproachStep.run(integer(record, "id"), title, text(record, "description"), text(record, "icon"), integer(record, "show_on_homepage"), integer(record, "position"), integer(record, "published", 1));
+      }
+
+      const aboutSections = Array.isArray(configuration.aboutSections) ? configuration.aboutSections : [];
+      const saveAboutSection = db.prepare(`INSERT OR REPLACE INTO about_sections
+        (key, eyebrow, headline, description, position, fixed, visible)
+        VALUES (?, ?, ?, ?, ?, ?, ?)`);
+      for (const record of aboutSections) {
+        const key = text(record, "key").trim();
+        if (key) saveAboutSection.run(key, text(record, "eyebrow"), text(record, "headline"), text(record, "description"), integer(record, "position"), integer(record, "fixed"), integer(record, "visible", 1));
+      }
+
+      const philosophyItems = Array.isArray(configuration.aboutPhilosophyItems) ? configuration.aboutPhilosophyItems : [];
+      const savePhilosophyItem = db.prepare(`INSERT OR REPLACE INTO about_philosophy_items
+        (id, title, description, icon, position, published)
+        VALUES (?, ?, ?, ?, ?, ?)`);
+      for (const record of philosophyItems) {
+        const title = text(record, "title").trim();
+        if (title) savePhilosophyItem.run(integer(record, "id"), title, text(record, "description"), text(record, "icon"), integer(record, "position"), integer(record, "published", 1));
+      }
+
+      const highlightItems = Array.isArray(configuration.aboutHighlightItems) ? configuration.aboutHighlightItems : [];
+      const saveHighlightItem = db.prepare(`INSERT OR REPLACE INTO about_highlight_items
+        (id, title, description, icon, position, published)
+        VALUES (?, ?, ?, ?, ?, ?)`);
+      for (const record of highlightItems) {
+        const title = text(record, "title").trim();
+        if (title) saveHighlightItem.run(integer(record, "id"), title, text(record, "description"), text(record, "icon"), integer(record, "position"), integer(record, "published", 1));
+      }
+
       const upsertCaseStudy = db.prepare(
         `INSERT INTO case_studies
           (slug, eyebrow, title, description, tags, position, published, body,

@@ -7,7 +7,7 @@ import type { Insight } from "@/data/insights";
 import styles from "./InsightsListing.module.css";
 
 function getTags(value: string) {
-  return value.split("*").map((tag) => tag.trim()).filter(Boolean);
+  return value.split(/[,;\n|*·]+/).map((tag) => tag.trim()).filter(Boolean);
 }
 
 export function InsightsListing({ insights }: { insights: Insight[] }) {

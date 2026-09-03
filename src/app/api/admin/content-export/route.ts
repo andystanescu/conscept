@@ -34,6 +34,22 @@ export async function GET() {
             description, position, published
      FROM about_experiences ORDER BY position, id`
   ).all();
+  const configuration = {
+    settings: db.prepare("SELECT key, value FROM settings ORDER BY key").all(),
+    homepageSections: db.prepare("SELECT * FROM homepage_sections ORDER BY position, key").all(),
+    services: db.prepare("SELECT * FROM service_items ORDER BY position, id").all(),
+    approachSteps: db.prepare("SELECT * FROM approach_steps ORDER BY position, id").all(),
+    aboutSections: db.prepare("SELECT * FROM about_sections ORDER BY position, key").all(),
+    aboutPhilosophyItems: db.prepare("SELECT * FROM about_philosophy_items ORDER BY position, id").all(),
+    aboutHighlightItems: db.prepare("SELECT * FROM about_highlight_items ORDER BY position, id").all(),
+  };
+  const pageConfiguration = (pages as Array<Record<string, unknown>>).map((page) => ({
+    slug: page.slug,
+    visible: page.visible,
+    show_in_nav: page.show_in_nav,
+    nav_label: page.nav_label,
+    position: page.position,
+  }));
 
   const source = JSON.stringify({ caseStudies, insights });
   const filenames = [...source.matchAll(/\/uploads\/([^"'?#]+)/g)]
@@ -57,7 +73,9 @@ export async function GET() {
         caseStudies,
         insights,
         pages,
+        pageConfiguration,
         experiences,
+        configuration,
         assets,
       },
       null,
