@@ -2,9 +2,9 @@
 .hero { display:grid; grid-template-columns:minmax(0, 1fr) minmax(320px, 0.72fr); min-height:620px; align-items:center; gap:var(--space-800); padding-block:var(--space-1200); }
 .heroCopy { display:flex; min-width:0; flex-direction:column; align-items:flex-start; gap:var(--space-300); }
 .breadcrumb { color:var(--text-tertiary); font:13px/1.35 var(--font-family-body); }
-.heroCopy h1 { max-width:620px; }
-.heroLead { max-width:520px; color:var(--text-secondary); }
-.heroDescription { max-width:500px; color:var(--text-secondary); }
+.heroCopy h1 { max-width:60vw; }
+.heroLead { max-width:60vw; color:var(--text-secondary); }
+.heroDescription { max-width:60vw; color:var(--text-secondary); }
 .heroActions { display:flex; flex-wrap:wrap; align-items:center; gap:var(--space-300); margin-top:var(--space-200); }
 .primaryButton, .secondaryButton { display:inline-flex; align-items:center; gap:var(--space-100); min-height:44px; padding:var(--space-150) var(--space-300); border-radius:var(--radius-md); font:500 14px/1.2 var(--font-family-body); }
 .primaryButton { background:var(--action-primary-bg); color:var(--action-primary-text); }

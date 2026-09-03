@@ -1,5 +1,5 @@
 .section { padding-block: var(--space-1200); }
-.section h2 { max-width: 680px; margin-top: var(--space-200); }
+.section h2 { max-width: 60vw; margin-top: var(--space-200); }
 .steps { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: var(--space-400); padding: 0; margin: var(--space-800) 0 0; list-style: none; }
 .step { min-width: 0; }
 .rule { height: 1px; margin-bottom: var(--space-300); background: var(--border-default); }
