@@ -689,7 +689,10 @@ render(<BeforeAfterComparison />);`;
           </div>
         </div>
       )}
-      <div className={state.hasLiveCode && !codeExpanded ? styles.collapsedLiveCode : undefined}>
+      <div
+        className={state.hasLiveCode && !codeExpanded ? styles.collapsedLiveCode : undefined}
+        onMouseDownCapture={() => setTypeStyleOpen(false)}
+      >
         <EditorContent editor={editor} />
       </div>
       {state.hasLiveCode && (
