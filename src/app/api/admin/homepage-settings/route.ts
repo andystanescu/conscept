@@ -2,19 +2,25 @@ import { NextRequest } from "next/server";
 import { relativeRedirect } from "@/lib/relativeRedirect";
 import { updateSettings } from "@/lib/settings";
 
+function formText(form: FormData, name: string, fallback = "") {
+  const value = form.get(name);
+  return typeof value === "string" ? value.trim() : fallback;
+}
+
 export async function POST(request: NextRequest) {
   const form = await request.formData();
   updateSettings({
-    homepage_cta_band_label: String(form.get("homepage_cta_band_label") ?? "").trim() || "Start a conversation",
-    homepage_case_study_link_label: String(form.get("homepage_case_study_link_label") ?? "").trim() || "View case study",
-    homepage_article_link_label: String(form.get("homepage_article_link_label") ?? "").trim() || "Read article",
-    homepage_insights_all_label: String(form.get("homepage_insights_all_label") ?? "").trim() || "See all insights",
-    homepage_meta_title: String(form.get("meta_title") ?? "").trim(),
-    homepage_meta_description: String(form.get("meta_description") ?? "").trim(),
-    homepage_meta_keywords: String(form.get("meta_keywords") ?? "").trim(),
-    homepage_canonical_url: String(form.get("canonical_url") ?? "").trim(),
-    homepage_og_image: String(form.get("og_image") ?? "").trim(),
+    homepage_cta_band_label: formText(form, "homepage_cta_band_label") || "Start a conversation",
+    homepage_case_study_link_label: formText(form, "homepage_case_study_link_label") || "View case study",
+    homepage_article_link_label: formText(form, "homepage_article_link_label") || "Read article",
+    homepage_insights_all_label: formText(form, "homepage_insights_all_label") || "See all insights",
+    homepage_meta_title: formText(form, "meta_title"),
+    homepage_meta_description: formText(form, "meta_description"),
+    homepage_meta_keywords: formText(form, "meta_keywords"),
+    homepage_canonical_url: formText(form, "canonical_url"),
+    homepage_og_image: formText(form, "og_image"),
     homepage_no_index: form.get("no_index") === "on" ? "1" : "0",
   });
-  return relativeRedirect("/admin/homepage");
+  const returnTab = form.get("return_tab") === "ctas" ? "ctas" : "metadata";
+  return relativeRedirect(`/admin/homepage?tab=${returnTab}`);
 }
