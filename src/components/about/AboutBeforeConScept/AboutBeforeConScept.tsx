@@ -22,8 +22,8 @@ export function AboutBeforeConScept() {
             <div className={styles.body}>
               <h3>{experience.job_title}</h3>
               <p className={styles.company}>{experience.company_name}{experience.business_profile ? ` · ${experience.business_profile}` : ""}</p>
-              <p className={styles.description}>{experience.description}</p>
             </div>
+            <p className={styles.description}>{experience.description}</p>
           </article>
         ))}
       </div>
