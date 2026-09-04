@@ -12,5 +12,7 @@ export default async function EditInsightPage({ params, searchParams }: { params
   const { error } = await searchParams;
   const insight = db.prepare("SELECT * FROM insights WHERE id = ?").get(id) as Insight | undefined;
   if (!insight) notFound();
-  return <><h1 className="heading-01">Edit article</h1>{error && <p style={{ color: "var(--border-error)" }}>{error}</p>}<InsightEditor action={`/api/admin/insights/${insight.id}`} categories={getServiceItems()} settingsAuthor={getSettings().author_name} insight={insight} /></>;
+  const categories = getServiceItems().map((service) => ({ id: service.id, title: service.title }));
+  const clientInsight = { ...insight };
+  return <><h1 className="heading-01">Edit article</h1>{error && <p style={{ color: "var(--border-error)" }}>{error}</p>}<InsightEditor action={`/api/admin/insights/${insight.id}`} categories={categories} settingsAuthor={getSettings().author_name} insight={clientInsight} /></>;
 }
