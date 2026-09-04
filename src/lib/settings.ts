@@ -32,6 +32,20 @@ export type SettingsMap = {
   logo_image_footer: string;
   about_hero_image: string;
   about_cv: string;
+  homepage_cta_band_label: string;
+  homepage_case_study_link_label: string;
+  homepage_article_link_label: string;
+  homepage_insights_all_label: string;
+  homepage_meta_title: string;
+  homepage_meta_description: string;
+  homepage_meta_title_business: string;
+  homepage_meta_description_business: string;
+  homepage_meta_title_personal: string;
+  homepage_meta_description_personal: string;
+  homepage_meta_keywords: string;
+  homepage_canonical_url: string;
+  homepage_og_image: string;
+  homepage_no_index: string;
 };
 
 const KEYS: (keyof SettingsMap)[] = [
@@ -66,6 +80,20 @@ const KEYS: (keyof SettingsMap)[] = [
   "logo_image_footer",
   "about_hero_image",
   "about_cv",
+  "homepage_cta_band_label",
+  "homepage_case_study_link_label",
+  "homepage_article_link_label",
+  "homepage_insights_all_label",
+  "homepage_meta_title",
+  "homepage_meta_description",
+  "homepage_meta_title_business",
+  "homepage_meta_description_business",
+  "homepage_meta_title_personal",
+  "homepage_meta_description_personal",
+  "homepage_meta_keywords",
+  "homepage_canonical_url",
+  "homepage_og_image",
+  "homepage_no_index",
 ];
 
 export function getSettings(): SettingsMap {
@@ -74,9 +102,14 @@ export function getSettings(): SettingsMap {
     value: string;
   }[];
   const map = Object.fromEntries(rows.map((r) => [r.key, r.value]));
+  const logoIdentity = map.logo_identity === "personal" ? "personal" : "business";
+  const businessMetaTitle = map.homepage_meta_title_business || map.homepage_meta_title || "ConScept — Design systems, product architecture, AI-enabled design operations";
+  const businessMetaDescription = map.homepage_meta_description_business || map.homepage_meta_description || "ConScept helps growing technology companies build the systems behind their products: design system architecture, product architecture, and AI-enabled design operations.";
+  const personalMetaTitle = map.homepage_meta_title_personal || "Andrei Stanescu — Product, design and systems thinking";
+  const personalMetaDescription = map.homepage_meta_description_personal || "Andrei Stanescu helps teams make better product decisions through design systems, product architecture and thoughtful ways of working.";
   return {
     author_name: map.author_name ?? "Andrei Stanescu",
-    logo_identity: map.logo_identity === "personal" ? "personal" : "business",
+    logo_identity: logoIdentity,
     work_outcome_title: map.work_outcome_title ?? "Better systems make better work repeatable.",
     work_outcome_body: map.work_outcome_body ?? "Clarity compounds: decisions become easier, teams move with more confidence and products improve over time.",
     approach_principle_eyebrow: map.approach_principle_eyebrow ?? "THE PRINCIPLE",
@@ -108,6 +141,20 @@ export function getSettings(): SettingsMap {
     logo_image_footer: map.logo_image_footer || map.logo_image || "",
     about_hero_image: map.about_hero_image ?? "",
     about_cv: map.about_cv ?? "",
+    homepage_cta_band_label: map.homepage_cta_band_label ?? "Start a conversation",
+    homepage_case_study_link_label: map.homepage_case_study_link_label ?? "View case study",
+    homepage_article_link_label: map.homepage_article_link_label ?? "Read article",
+    homepage_insights_all_label: map.homepage_insights_all_label ?? "See all insights",
+    homepage_meta_title: logoIdentity === "personal" ? personalMetaTitle : businessMetaTitle,
+    homepage_meta_description: logoIdentity === "personal" ? personalMetaDescription : businessMetaDescription,
+    homepage_meta_title_business: businessMetaTitle,
+    homepage_meta_description_business: businessMetaDescription,
+    homepage_meta_title_personal: personalMetaTitle,
+    homepage_meta_description_personal: personalMetaDescription,
+    homepage_meta_keywords: map.homepage_meta_keywords ?? "",
+    homepage_canonical_url: map.homepage_canonical_url ?? "",
+    homepage_og_image: map.homepage_og_image ?? "",
+    homepage_no_index: map.homepage_no_index ?? "0",
   };
 }
 

@@ -1,4 +1,7 @@
 import { getAllSections } from "@/lib/homepage";
+import { getSettings } from "@/lib/settings";
+import { MetadataFields } from "@/components/admin/MetadataFields/MetadataFields";
+import { AdminContentTabs } from "@/components/admin/AdminContentTabs/AdminContentTabs";
 import { ReorderableList } from "@/components/admin/ReorderableList/ReorderableList";
 import { InlineSectionCard } from "@/components/admin/InlineSectionCard/InlineSectionCard";
 import styles from "../admin.module.css";
@@ -20,6 +23,7 @@ export default async function AdminHomepagePage({
 }) {
   const { tab } = await searchParams;
   const sections = getAllSections();
+  const settings = getSettings();
   const fixedSections = sections.filter((s) => s.fixed);
   const reorderable = sections.filter((s) => !s.fixed);
 
@@ -34,41 +38,6 @@ export default async function AdminHomepagePage({
         in #like this# to color it orange.
       </p>
 
-<<<<<<< Updated upstream
-      <ul className={styles.list}>{fixedSections.map((section) => <li key={section.key} className={styles.listItem}><InlineSectionCard section={section} label={LABELS[section.key] ?? section.key} parent="homepage" fixed /></li>)}</ul>
-
-      <ReorderableList
-        className={styles.list}
-        itemClassName={styles.listItem}
-        reorderUrl="/api/admin/homepage/reorder"
-        style={{ marginTop: "var(--space-200)" }}
-        items={reorderable.map((section, index) => ({
-          id: section.key,
-          node: (
-            <>
-              <InlineSectionCard section={section} label={LABELS[section.key] ?? section.key} parent="homepage" reorder={<>
-                <form action={`/api/admin/homepage/${section.key}/move`} method="POST">
-                  <input type="hidden" name="direction" value="up" />
-                  <button type="submit" disabled={index === 0} aria-label="Move up">
-                    ↑
-                  </button>
-                </form>
-                <form action={`/api/admin/homepage/${section.key}/move`} method="POST">
-                  <input type="hidden" name="direction" value="down" />
-                  <button
-                    type="submit"
-                    disabled={index === reorderable.length - 1}
-                    aria-label="Move down"
-                  >
-                    ↓
-                  </button>
-                </form>
-              </>}/>
-            </>
-          ),
-        }))}
-      />
-=======
       <AdminContentTabs initialTab={tab === "ctas" || tab === "metadata" ? tab : "sections"} tabs={[
         {
           id: "sections",
@@ -124,7 +93,6 @@ export default async function AdminHomepagePage({
           </section>,
         },
       ]} />
->>>>>>> Stashed changes
     </>
   );
 }
