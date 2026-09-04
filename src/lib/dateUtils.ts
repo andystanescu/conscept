@@ -16,3 +16,8 @@ export function displayDate(value: string) {
   const parsed = new Date(`${dateInputValue(value)}T12:00:00`);
   return Number.isNaN(parsed.getTime()) ? value : parsed.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
 }
+
+export function displayMonthYear(value: string) {
+  const parsed = new Date(`${dateInputValue(value)}T12:00:00`);
+  return Number.isNaN(parsed.getTime()) ? value : parsed.toLocaleDateString("en-GB", { month: "long", year: "numeric" });
+}

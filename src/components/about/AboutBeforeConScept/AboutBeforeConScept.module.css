@@ -7,6 +7,10 @@
 .body { display: flex; min-width: 0; flex-direction: column; gap: 6px; }
 .body h3 { color: var(--text-primary); font-size: 18px; font-weight: 600; }
 .company { color: var(--text-secondary); font-size: 13px; font-weight: 500; }
-.description { width: 100%; max-width: none; color: var(--text-secondary); font-size: 15px; line-height: 1.5; }
+.description { width: 100%; max-width: none; min-width: 0; color: var(--text-secondary); font-size: 15px; line-height: 1.5; }
+.description :global(.content) { gap: 0; color: inherit; font-size: inherit; line-height: inherit; }
+.description :global(.content p) { margin: 0; }
+.description :global(.content p + p) { margin-top: 10px; }
+.description :global(.content h1), .description :global(.content h2), .description :global(.content h3) { margin-top: 12px; font-size: 18px; }
 @media (max-width: 900px) { .card { grid-template-columns: minmax(120px, 160px) minmax(0, 1fr); gap: 24px; } .description { grid-column: 2; } }
 @media (max-width: 700px) { .card { display: flex; flex-direction: column; gap: 12px; } .dates { flex-basis: auto; } .description { width: 100%; } }
