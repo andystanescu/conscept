@@ -1,17 +1,21 @@
 .nav {
   display: flex;
   flex-direction: column;
-  gap: var(--space-50);
+  gap: var(--space-500);
   flex: 1;
 }
+
+.group { display: flex; flex-direction: column; gap: var(--space-150); }
+.groupItems { display: flex; flex-direction: column; gap: var(--space-50); }
+.groupLabel { margin: 0 var(--space-150); color: var(--text-tertiary); font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }
 
 .navLink {
   display: flex;
   align-items: center;
   gap: var(--space-150);
-  padding: var(--space-100) var(--space-150);
-  border-left: 2px solid transparent;
-  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  padding: var(--space-150) var(--space-150);
+  border-left: 3px solid transparent;
+  border-radius: var(--radius-md);
   font-family: var(--font-family-body);
   font-size: 14px;
   font-weight: 500;

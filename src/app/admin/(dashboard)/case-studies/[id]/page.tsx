@@ -47,7 +47,6 @@ export default async function EditCaseStudyPage({
 
   return (
     <>
-      <h1 className="heading-01">Edit case study</h1>
       {error && <p style={{ color: "var(--border-error)" }}>{error}</p>}
       <CaseStudyEditor study={clientStudy} metrics={metrics} assessment={assessment} services={services.map((service) => ({ ...service }))} passwordRequired={Boolean(study.password_required)} passwordEntries={passwordEntries} />
     </>

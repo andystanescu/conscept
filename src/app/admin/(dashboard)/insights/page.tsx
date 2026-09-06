@@ -15,13 +15,10 @@ export default function AdminInsightsPage() {
 
   return (
     <>
-      <h1 className="heading-01">Insights</h1>
+      <div className={styles.pageHeader}><h1 className="heading-01">Insights</h1><Link href="/admin/insights/new" className={styles.newLink}>New article</Link></div>
       <AdminTabs tabs={INSIGHTS_TABS} active="/admin/insights" />
       <div className={styles.toolbar}>
         <p className="heading-02">Published articles</p>
-        <Link href="/admin/insights/new" className={styles.newLink}>
-          New article
-        </Link>
       </div>
 
       {insights.length === 0 ? (

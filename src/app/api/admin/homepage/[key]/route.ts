@@ -39,5 +39,5 @@ export async function POST(
     visible,
   });
 
-  return relativeRedirect("/admin/homepage");
+  return relativeRedirect(form.get("return_tab") === "ctas" ? "/admin/homepage?tab=ctas" : "/admin/homepage");
 }

@@ -14,7 +14,6 @@ export default async function NewCaseStudyPage({
 
   return (
     <>
-      <h1 className="heading-01">New case study</h1>
       {error && <p style={{ color: "var(--border-error)" }}>{error}</p>}
       <form
         className={styles.form}

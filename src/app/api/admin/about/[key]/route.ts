@@ -41,5 +41,5 @@ export async function POST(
     updateSettings({ about_hero_image: aboutHeroImage });
   }
 
-  return relativeRedirect("/admin/about");
+  return relativeRedirect(form.get("return_tab") === "experiences" ? "/admin/about-experiences" : "/admin/about");
 }

@@ -29,16 +29,12 @@ export async function POST(request: Request, { params }: { params: Promise<{ pag
       db.exec("ROLLBACK");
       return NextResponse.json({ error: "Invalid sections or fixed section position." }, { status: 400 });
     }
-    if (page === "work" || page === "insights") {
-      db.prepare("INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value").run(`layout_${page}`, JSON.stringify(sections.map((section, index) => ({ ...section, position: index }))));
-    } else {
-      const table = page === "homepage" ? "homepage_sections" : "about_sections";
-      const update = db.prepare(`UPDATE ${table} SET position = ?, visible = ? WHERE key = ?`);
-      sections.forEach((section, index) => update.run(index, Number(section.visible), section.key));
-    }
+    const table = page === "homepage" ? "homepage_sections" : "about_sections";
+    const update = db.prepare(`UPDATE ${table} SET position = ?, visible = ? WHERE key = ?`);
+    sections.forEach((section, index) => update.run(index, Number(section.visible), section.key));
     const saved = getLayoutConfiguration(page);
     db.exec("COMMIT");
-    revalidatePath(page === "homepage" ? "/" : page === "about" ? "/about" : page === "work" ? "/work" : "/insights");
+    revalidatePath(page === "homepage" ? "/" : "/about");
     revalidatePath(`/admin/${page}`);
     return NextResponse.json(saved);
   } catch (error) {

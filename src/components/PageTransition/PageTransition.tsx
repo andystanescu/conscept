@@ -9,6 +9,7 @@ export function PageTransition({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const [exiting, setExiting] = useState(false);
+  const [tabExit, setTabExit] = useState(false);
 
   useEffect(() => {
     setExiting(false);
@@ -31,9 +32,10 @@ export function PageTransition({ children }: { children: ReactNode }) {
 
     event.preventDefault();
     event.stopPropagation();
+    setTabExit(Boolean(link.closest('[role="tab"]')) && !link.closest('[data-admin-sidebar]'));
     setExiting(true);
     window.setTimeout(() => router.push(`${destination.pathname}${destination.search}${destination.hash}`), 500);
   }
 
-  return <div key={pathname} className={`${styles.page} ${exiting ? styles.pageExit : ""}`} onClickCapture={handleClick}>{children}</div>;
+  return <div className={`${styles.page} ${exiting ? styles.pageExit : ""} ${tabExit ? styles.pageTabExit : ""}`} onClickCapture={handleClick}>{children}</div>;
 }

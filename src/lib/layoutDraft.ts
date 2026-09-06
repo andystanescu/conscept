@@ -1,13 +1,11 @@
 export const LAYOUT_SECTIONS = {
   homepage: { hero: "Hero", services: "Services", approach: "Approach", selected_impact: "Selected Impact", latest_insights: "Latest Insights" },
   about: { hero: "Hero", drives_me: "What Drives Me", philosophy: "Philosophy", highlights: "Highlights", latest_insights: "Latest Insights", before_conscept: "Before ConScept" },
-  work: { hero: "Hero", featured_case_study: "Featured Case Study", more_case_studies: "More Case Studies", outcome: "The Outcome", latest_insights: "Latest Insights" },
-  insights: { hero: "Hero", insight_list: "Articles" },
 };
 export type LayoutPage = keyof typeof LAYOUT_SECTIONS;
 export type LayoutSection = { key: string; label: string; visible: boolean; fixed: boolean };
 export function isLayoutPage(value: string): value is LayoutPage {
-  return value === "homepage" || value === "about" || value === "work" || value === "insights";
+  return value === "homepage" || value === "about";
 }
 export function layoutSections(page: LayoutPage, rows: { key: string; visible: number; fixed: number }[]): LayoutSection[] {
   const labels: Record<string, string> = LAYOUT_SECTIONS[page];

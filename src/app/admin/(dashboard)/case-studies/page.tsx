@@ -15,13 +15,10 @@ export default function AdminCaseStudiesPage() {
 
   return (
     <>
-      <h1 className="heading-01">Case studies</h1>
+      <div className={styles.pageHeader}><h1 className="heading-01">Case studies</h1><Link href="/admin/case-studies/new" className={styles.newLink}>New case study</Link></div>
       <AdminTabs tabs={CASE_STUDIES_TABS} active="/admin/case-studies" />
       <div className={styles.toolbar}>
         <p className="heading-02">Listed case studies</p>
-        <Link href="/admin/case-studies/new" className={styles.newLink}>
-          New case study
-        </Link>
       </div>
 
       {caseStudies.length === 0 ? (

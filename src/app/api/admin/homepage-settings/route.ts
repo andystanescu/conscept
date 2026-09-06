@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { relativeRedirect } from "@/lib/relativeRedirect";
 import { getSettings, updateSettings } from "@/lib/settings";
+import { getSection, updateSection } from "@/lib/homepage";
 
 function formText(form: FormData, name: string, fallback = "") {
   const value = form.get(name);
@@ -24,6 +25,19 @@ export async function POST(request: NextRequest) {
     homepage_og_image: formText(form, "og_image"),
     homepage_no_index: form.get("no_index") === "on" ? "1" : "0",
   });
+  const hero = getSection("hero");
+  if (hero && form.has("cta_primary_label")) {
+    updateSection("hero", {
+      eyebrow: hero.eyebrow,
+      headline: hero.headline,
+      description: hero.description,
+      ctaPrimaryLabel: formText(form, "cta_primary_label"),
+      ctaPrimaryHref: formText(form, "cta_primary_href"),
+      ctaSecondaryLabel: formText(form, "cta_secondary_label"),
+      ctaSecondaryHref: formText(form, "cta_secondary_href"),
+      visible: !!hero.visible,
+    });
+  }
   const returnTab = form.get("return_tab") === "ctas" ? "ctas" : "metadata";
   return relativeRedirect(`/admin/homepage?tab=${returnTab}`);
 }

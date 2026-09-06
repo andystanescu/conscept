@@ -1,8 +1,7 @@
 import Link from "next/link";
 import { getAllPhilosophyItemsAdmin } from "@/lib/about";
 import { ReorderableList } from "@/components/admin/ReorderableList/ReorderableList";
-import { AdminTabs } from "@/components/admin/AdminTabs/AdminTabs";
-import { ABOUT_TABS } from "../adminTabs";
+import { AboutAdminHeader } from "@/components/admin/AboutAdminHeader/AboutAdminHeader";
 import styles from "../admin.module.css";
 
 export const dynamic = "force-dynamic";
@@ -12,13 +11,10 @@ export default function AdminAboutPhilosophyPage() {
 
   return (
     <>
-      <h1 className="heading-01">About</h1>
-      <AdminTabs tabs={ABOUT_TABS} active="/admin/about-philosophy" />
-      <div className={styles.toolbar}>
+      <AboutAdminHeader active="/admin/about-philosophy" />
+      <div className={styles.contentTitleRow}>
         <p className="heading-02">Philosophy</p>
-        <Link href="/admin/about-philosophy/new" className={styles.newLink}>
-          New item
-        </Link>
+        <Link href="/admin/about-philosophy/new" className={styles.newLink}>New item</Link>
       </div>
       <p className={`body-small ${styles.helper}`}>
         The 4 items shown in the About page&apos;s Philosophy section. Drag to

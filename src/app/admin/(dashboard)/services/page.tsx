@@ -12,13 +12,10 @@ export default function AdminServicesPage() {
 
   return (
     <>
-      <h1 className="heading-01">Services</h1>
+      <div className={styles.pageHeader}><h1 className="heading-01">Services</h1><Link href="/admin/services/new" className={styles.newLink}>New service</Link></div>
       <AdminTabs tabs={SERVICES_TABS} active="/admin/services" />
       <div className={styles.toolbar}>
         <p className="heading-02">Listed items</p>
-        <Link href="/admin/services/new" className={styles.newLink}>
-          New service
-        </Link>
       </div>
       <p className={`body-small ${styles.helper}`}>
         Listed on /services. Toggle &ldquo;Show on homepage&rdquo; on a

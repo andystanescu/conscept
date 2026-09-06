@@ -5,11 +5,17 @@ import { getVisibleSection, getSectionOrder } from "@/lib/homepage";
 import { LatticeDiagram } from "./LatticeDiagram";
 import { LatticeInteractive } from "./LatticeInteractive";
 import { DiagramLayout } from "./DiagramLayout";
+import { getSettings } from "@/lib/settings";
 import styles from "./Hero.module.css";
 
 export function Hero() {
   const section = getVisibleSection("hero")!;
   const [firstSectionKey] = getSectionOrder();
+  const personal = getSettings().logo_identity === "personal";
+  const primaryLabel = personal ? "See my work" : section.cta_primary_label;
+  const primaryHref = personal ? "/work" : section.cta_primary_href;
+  const secondaryLabel = personal ? "Read articles" : section.cta_secondary_label;
+  const secondaryHref = personal ? "/insights" : section.cta_secondary_href;
 
   return (
     <section className={styles.hero}>
@@ -22,15 +28,15 @@ export function Hero() {
             {section.description}
           </p>
           <div className={styles.actions}>
-            <Button href={section.cta_secondary_href} icon={<ArrowIcon size={20} />}>
-              {section.cta_secondary_label}
+            <Button href={primaryHref} icon={<ArrowIcon size={20} />}>
+              {primaryLabel}
             </Button>
             <Button
               variant="link"
-              href={section.cta_primary_href}
+              href={secondaryHref}
               icon={<ArrowIcon size={20} />}
             >
-              {section.cta_primary_label}
+              {secondaryLabel}
             </Button>
           </div>
         </div>

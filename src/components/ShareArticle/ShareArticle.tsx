@@ -3,7 +3,7 @@
 import { useState } from "react";
 import styles from "./ShareArticle.module.css";
 
-export function ShareArticle({ title }: { title: string }) {
+export function ShareArticle({ title, contentType = "article", contentId = "" }: { title: string; contentType?: "article" | "case_study"; contentId?: string }) {
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
 
@@ -13,6 +13,7 @@ export function ShareArticle({ title }: { title: string }) {
 
   async function share() {
     const url = getUrl();
+    void fetch("/api/analytics", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ eventType: "share", contentType, contentId }) }).catch(() => undefined);
     if (navigator.share) {
       await navigator.share({ title, url }).catch(() => undefined);
       return;
@@ -21,6 +22,7 @@ export function ShareArticle({ title }: { title: string }) {
   }
 
   async function copyLink() {
+    void fetch("/api/analytics", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ eventType: "share", contentType, contentId }) }).catch(() => undefined);
     await navigator.clipboard?.writeText(getUrl());
     setCopied(true);
     window.setTimeout(() => setCopied(false), 1800);

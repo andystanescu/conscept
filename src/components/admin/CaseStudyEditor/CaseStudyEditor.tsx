@@ -23,7 +23,8 @@ export function CaseStudyEditor({ study, metrics, assessment, services, password
   const publishedDate = "published_at" in study && typeof study.published_at === "string" ? study.published_at : "";
   const formRef = useRef<HTMLFormElement>(null);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [saveState, setSaveState] = useState<"saved" | "saving" | "error">("saved");
+  const saveStatusTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [saveState, setSaveState] = useState<"idle" | "saved" | "saving" | "error">("idle");
   const [scores, setScores] = useState<Record<string, string>>(() => Object.fromEntries(assessmentCriteriaList.map((criterion) => [criterion.key, String(assessment.scores[criterion.key] ?? "")] )));
   const overallOptions = ["Focused engagement", "Defined initiative", "Strategic initiative", "Transformation programme", "Enterprise programme"];
   const overallDescriptions: Record<string, string> = { "Focused engagement": "A contained piece of work with a clear problem, owner, and delivery path.", "Defined initiative": "A bounded initiative involving a small number of teams, decisions, or dependencies.", "Strategic initiative": "A meaningful piece of work that influences product direction, priorities, or ways of working.", "Transformation programme": "A sustained change across products, teams, systems, or organisational practices.", "Enterprise programme": "A broad, high-stakes programme requiring organisation-wide coordination and long-term governance." };
@@ -46,27 +47,35 @@ export function CaseStudyEditor({ study, metrics, assessment, services, password
       const response = await fetch(form.action, { method: "POST", body: formData });
       if (!response.ok) throw new Error("Draft save failed");
       setSaveState("saved");
+      if (saveStatusTimerRef.current) clearTimeout(saveStatusTimerRef.current);
+      saveStatusTimerRef.current = setTimeout(() => setSaveState("idle"), 5000);
     } catch {
       setSaveState("error");
     }
   };
   const scheduleDraftSave = () => {
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    if (saveStatusTimerRef.current) clearTimeout(saveStatusTimerRef.current);
     setSaveState("saving");
     saveTimerRef.current = setTimeout(() => void saveDraft(), 700);
   };
   useEffect(() => () => {
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    if (saveStatusTimerRef.current) clearTimeout(saveStatusTimerRef.current);
   }, []);
   return (
-    <form ref={formRef} className={adminStyles.form} action={`/api/admin/case-studies/${study.id}`} method="POST" encType="multipart/form-data" onInput={scheduleDraftSave} onChange={scheduleDraftSave}>
-      <div className={styles.tabs} role="tablist" aria-label="Case study details">
+    <form ref={formRef} className={`${adminStyles.form} ${styles.editorForm}`} action={`/api/admin/case-studies/${study.id}`} method="POST" encType="multipart/form-data" onInput={scheduleDraftSave} onChange={scheduleDraftSave}>
+      <header className={styles.editorHeader}>
+        <div className={styles.editorHeading}><p className={styles.editorEyebrow}>ADMIN · CASE STUDY</p><h1>{study.title}</h1></div>
+        <div className={styles.editorActions}>{saveState !== "idle" && <span className={styles.saveStatus}>{saveState === "saving" ? "Saving…" : saveState === "error" ? "Save failed" : "Saved"}</span>}<button type="submit" name="intent" value="publish" className={adminStyles.submit}>Publish</button></div>
+        <div className={styles.tabs} role="tablist" aria-label="Case study details">
         {(["content", "details", "outcomes", "assessment", "metadata", "visibility"] as const).map((value) => (
           <button key={value} id={`case-study-tab-${value}`} type="button" role="tab" aria-selected={tab === value} aria-controls={`case-study-panel-${value}`} tabIndex={tab === value ? 0 : -1} className={tab === value ? styles.tabActive : styles.tab} onClick={() => setTab(value)}>
             {value === "details" ? "Details" : value === "outcomes" ? "Outcomes" : value === "assessment" ? "Assessment" : value === "metadata" ? "Metadata and SEO" : value === "visibility" ? "Visibility" : "Content"}
           </button>
         ))}
-      </div>
+        </div>
+      </header>
 
       <section id="case-study-panel-details" role="tabpanel" aria-labelledby="case-study-tab-details" hidden={tab !== "details"} className={styles.panel} aria-label="Case study details">
         {services.length < 8 ? <CategoryCards value={study.category} services={services} /> : <Field label="Category (from Services)"><select name="category" defaultValue={study.category} className={adminStyles.input}><option value="">Select a service category</option>{services.map((service) => <option key={service.slug} value={service.title}>{service.title}</option>)}</select></Field>}
@@ -99,7 +108,7 @@ export function CaseStudyEditor({ study, metrics, assessment, services, password
 
       <section id="case-study-panel-content" role="tabpanel" aria-labelledby="case-study-tab-content" hidden={tab !== "content"} className={styles.panel} aria-label="Case study content">
         <p className="body-small">Your changes save automatically as a draft. Use Publish when the case study is ready to go live.</p>
-        <div className={`${adminStyles.field} ${adminStyles.fieldWide}`}><span className="label-small" style={{ color: "var(--text-secondary)" }}>Full write-up</span><RichTextEditor name="body" defaultValue={study.body} onContentChange={scheduleDraftSave} /></div>
+        <div className={`${adminStyles.field} ${adminStyles.fieldWide}`}><span className="label-small" style={{ color: "var(--text-secondary)" }}>Body</span><RichTextEditor name="body" defaultValue={study.body} onContentChange={scheduleDraftSave} /></div>
       </section>
 
       <section id="case-study-panel-metadata" role="tabpanel" aria-labelledby="case-study-tab-metadata" hidden={tab !== "metadata"} className={styles.panel} aria-label="Case study metadata and SEO">
@@ -113,7 +122,6 @@ export function CaseStudyEditor({ study, metrics, assessment, services, password
         <div className={styles.passwordManager}><div className={styles.passwordManagerHeader}><div><h2 className="heading-03">Accepted passwords</h2><p className="body-small">{passwordEntries.length} active {passwordEntries.length === 1 ? "password" : "passwords"}. New passwords remain visible until this draft is saved.</p></div></div><PasswordManager passwordEntries={passwordEntries} onCommit={scheduleDraftSave} /></div>
       </section>
 
-      <div className={adminStyles.formActions}><span className="body-small" aria-live="polite">{saveState === "saving" ? "Saving draft…" : saveState === "error" ? "Draft could not be saved" : "Draft saved"}</span><button type="submit" name="intent" value="publish" className={adminStyles.submit}><span className="label-button">Publish</span></button></div>
     </form>
   );
 }

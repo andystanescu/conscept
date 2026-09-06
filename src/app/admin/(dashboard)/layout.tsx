@@ -11,7 +11,7 @@ export default function AdminDashboardLayout({
 }) {
   return (
     <div className={styles.shell} data-admin-shell>
-      <aside className={styles.sidebar}>
+      <aside className={styles.sidebar} data-admin-sidebar>
         <div className={styles.brand}>
           <Logo variant="compact" />
           <p className="label-eyebrow" style={{ color: "var(--text-accent)" }}>

@@ -15,6 +15,7 @@ import styles from "./insight.module.css";
 import { contentMetadata, absoluteUrl } from "@/lib/seo";
 import { displayDate } from "@/lib/dateUtils";
 import { AuthorAvatar } from "@/components/AuthorAvatar/AuthorAvatar";
+import { recordAnalyticsEvent } from "@/lib/analytics";
 
 export const dynamic = "force-dynamic";
 
@@ -36,6 +37,7 @@ export default async function InsightDetailPage({
   if (!insight) {
     notFound();
   }
+  recordAnalyticsEvent("view", "article", insight.slug);
 
   const { html: bodyHtml, toc } = addHeadingIds(insight.body);
   const readingMinutes = calculateReadingTime(insight.body);

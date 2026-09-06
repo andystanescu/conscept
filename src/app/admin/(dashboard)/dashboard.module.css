@@ -90,11 +90,16 @@
    continue to own their content and actions; the shell supplies the shared
    eyebrow/title treatment here. */
 .content :global(h1.heading-01:not(.dashboardTitle)) {
+  position: sticky;
+  top: 0;
+  z-index: 5;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: var(--space-100);
-  margin-bottom: var(--space-400);
+  gap: var(--space-200);
+  padding: 0 0 var(--space-300);
+  background: var(--bg-canvas);
+  margin-bottom: var(--space-300);
 }
 
 .content :global(h1.heading-01:not(.dashboardTitle))::before {
@@ -110,4 +115,21 @@
 
 .content :global(h1.heading-01.dashboardTitle) {
   margin-bottom: 0;
+}
+
+.content .pageHeader h1 {
+  position: static;
+  padding: 0;
+  background: transparent;
+}
+
+/* Page-level helper copy sits in the persistent header stack when a screen
+   exposes it; form-specific helper text remains inside the scrolling body. */
+.content > .helper {
+  position: sticky;
+  top: calc(-1 * var(--space-600) + 8rem);
+  z-index: 3;
+  margin-top: calc(-1 * var(--space-200));
+  padding: var(--space-100) 0 var(--space-200);
+  background: var(--bg-canvas);
 }

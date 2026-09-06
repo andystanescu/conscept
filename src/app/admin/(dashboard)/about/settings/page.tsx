@@ -1,8 +1,7 @@
 import { notFound } from "next/navigation";
 import { getPage } from "@/lib/pages";
-import { AdminTabs } from "@/components/admin/AdminTabs/AdminTabs";
+import { AboutAdminHeader } from "@/components/admin/AboutAdminHeader/AboutAdminHeader";
 import { PageSettingsForm } from "@/components/admin/PageSettingsForm/PageSettingsForm";
-import { ABOUT_TABS } from "../../adminTabs";
 
 export const dynamic = "force-dynamic";
 
@@ -20,8 +19,7 @@ export default async function AboutPageSettingsPage({
 
   return (
     <>
-      <h1 className="heading-01">About</h1>
-      <AdminTabs tabs={ABOUT_TABS} active="/admin/about/settings" />
+      <AboutAdminHeader active="/admin/about/settings" />
       <PageSettingsForm
         page={page}
         error={error}

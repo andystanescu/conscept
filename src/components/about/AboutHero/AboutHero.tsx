@@ -35,7 +35,7 @@ export function AboutHero() {
         </p>
         {personal && settings.about_cv && (
           <div>
-            <Button href={settings.about_cv} download>
+            <Button href="/api/cv-download" download>
               Download CV
             </Button>
           </div>

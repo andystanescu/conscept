@@ -24,7 +24,7 @@ export function InlineSectionCard({ section, label, parent, fixed = false, reord
       <details className={styles.details} open={aboutHero || undefined}>
         <summary className={styles.summary}>
           <span><strong className="body-default">{label}</strong>{fixed && <small>fixed position</small>}{!section.visible && <small className={styles.hidden}>hidden from site</small>}</span>
-          <span className={styles.summaryActions}>{reorder}<span className={styles.chevron}>⌄</span></span>
+          <span className={styles.summaryActions}>{reorder}<span className={styles.expandIcon} aria-hidden="true">+</span></span>
         </summary>
         <form className={adminStyles.form} action={action} method="POST" encType={aboutHero ? "multipart/form-data" : undefined}>
           <label className={adminStyles.field}><span className="label-small">Eyebrow</span><input name="eyebrow" defaultValue={section.eyebrow} className={adminStyles.input} /></label>

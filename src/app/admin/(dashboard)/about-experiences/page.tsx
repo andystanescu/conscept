@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { getAllExperiencesAdmin, getSection } from "@/lib/about";
-import { AdminTabs } from "@/components/admin/AdminTabs/AdminTabs";
-import { ABOUT_TABS } from "../adminTabs";
+import { AboutAdminHeader } from "@/components/admin/AboutAdminHeader/AboutAdminHeader";
 import styles from "../admin.module.css";
 
 export const dynamic = "force-dynamic";
@@ -11,19 +10,28 @@ export default function AdminAboutExperiencesPage() {
   const section = getSection("before_conscept");
   return (
     <>
-      <h1 className="heading-01">About</h1>
-      <AdminTabs tabs={ABOUT_TABS} active="/admin/about-experiences" />
-      <div className={styles.toolbar}>
+      <AboutAdminHeader active="/admin/about-experiences" />
+      <div className={styles.contentTitleRow}>
         <p className="heading-02">Before ConScept</p>
         <Link href="/admin/about-experiences/new" className={styles.newLink}>New experience</Link>
       </div>
-      <p className={`body-small ${styles.helper}`}>
-        Edit the eyebrow and title through the section card, then add the experience cards shown in Personal mode.
-      </p>
       {section && (
-        <p className={styles.listItemMeta}>
-          <Link href="/admin/about/before_conscept" className={styles.editLink}>Edit section title and eyebrow</Link>
-        </p>
+        <form className={styles.form} action="/api/admin/about/before_conscept" method="POST">
+          <input type="hidden" name="return_tab" value="experiences" />
+          <label className={styles.field}>
+            <span className="label-small">Eyebrow</span>
+            <input name="eyebrow" defaultValue={section.eyebrow} className={styles.input} />
+          </label>
+          <label className={styles.field}>
+            <span className="label-small">Title</span>
+            <input name="headline" defaultValue={section.headline} required className={styles.input} />
+          </label>
+          <input type="hidden" name="description" value={section.description} />
+          <input type="hidden" name="visible" value={section.visible ? "on" : ""} />
+          <div className={styles.formActions}>
+            <button type="submit" className={styles.submit}>Save section</button>
+          </div>
+        </form>
       )}
       {experiences.length === 0 ? <p className={`body-default ${styles.empty}`}>No experiences yet.</p> : (
         <ul className={styles.list}>

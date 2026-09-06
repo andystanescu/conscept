@@ -19,6 +19,7 @@ import { getSettings } from "@/lib/settings";
 import { displayDate } from "@/lib/dateUtils";
 import { AuthorAvatar } from "@/components/AuthorAvatar/AuthorAvatar";
 import { ShareArticle } from "@/components/ShareArticle/ShareArticle";
+import { recordAnalyticsEvent } from "@/lib/analytics";
 import headerStyles from "@/app/insights/[slug]/insight.module.css";
 
 export const dynamic = "force-dynamic";
@@ -47,6 +48,7 @@ export default async function CaseStudyDetailPage({ params, searchParams }: { pa
     const query = searchParams ? await searchParams : {};
     return <><Nav /><CaseStudyPasswordGate slug={study.slug} error={query.accessError ? "That password was not recognised." : undefined} /><Footer /></>;
   }
+  recordAnalyticsEvent("view", "case_study", study.slug);
   const { html: bodyHtml, toc } = addHeadingIds(study.body);
   const studies = getCaseStudies();
   const index = studies.findIndex((item) => item.slug === study.slug);
@@ -90,7 +92,7 @@ export default async function CaseStudyDetailPage({ params, searchParams }: { pa
             {publicationDetails && <p className="body-small" style={{ color: "var(--text-tertiary)" }}>{publicationDetails}</p>}
             {study.tags && <p className={headerStyles.tags}>{study.tags}</p>}
           </div>
-          <ShareArticle title={study.title} />
+          <ShareArticle title={study.title} contentType="case_study" contentId={study.slug} />
         </div>
         {study.cover_image && <div className={headerStyles.heroImage}><img src={study.cover_image} alt="" /></div>}
       </section>

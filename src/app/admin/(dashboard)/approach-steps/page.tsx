@@ -12,13 +12,10 @@ export default function AdminApproachStepsPage() {
 
   return (
     <>
-      <h1 className="heading-01">Approach steps</h1>
+      <div className={styles.pageHeader}><h1 className="heading-01">Approach steps</h1><Link href="/admin/approach-steps/new" className={styles.newLink}>New step</Link></div>
       <AdminTabs tabs={APPROACH_TABS} active="/admin/approach-steps" />
       <div className={styles.toolbar}>
         <p className="heading-02">Listed steps</p>
-        <Link href="/admin/approach-steps/new" className={styles.newLink}>
-          New step
-        </Link>
       </div>
       <p className={`body-small ${styles.helper}`}>
         Listed in the How I work section on /about. Toggle &ldquo;Show on homepage&rdquo; on a

@@ -1,4 +1,4 @@
-import { getAllSections } from "@/lib/homepage";
+import { getAllSections, getSection } from "@/lib/homepage";
 import { LayoutEditor } from "@/components/admin/LayoutEditor/LayoutEditor";
 import { getLayoutConfiguration } from "@/lib/layoutConfiguration";
 import { getSettings } from "@/lib/settings";
@@ -25,20 +25,21 @@ export default async function AdminHomepagePage({
 }) {
   const { tab } = await searchParams;
   const sections = getAllSections();
+  const hero = getSection("hero");
   const settings = getSettings();
   const fixedSections = sections.filter((s) => s.fixed);
   const reorderable = sections.filter((s) => !s.fixed);
 
   return (
     <>
-      <div className={styles.toolbar}>
+      <div className={`${styles.pageHeader} ${styles.pageHeaderStacked}`}>
         <h1 className="heading-01">Homepage</h1>
+        <p className={`body-small ${styles.helper}`}>
+          Nav, Hero, and Footer are always in that position. The sections in
+          between can be reordered — drag them, or use the arrows. Wrap a word
+          in #like this# to color it orange.
+        </p>
       </div>
-      <p className={`body-small ${styles.helper}`}>
-        Nav, Hero, and Footer are always in that position. The sections in
-        between can be reordered — drag them, or use the arrows. Wrap a word
-        in #like this# to color it orange.
-      </p>
 
       <AdminContentTabs initialTab={tab === "ctas" || tab === "metadata" || tab === "layout" ? tab : "sections"} tabs={[
         { id: "layout", label: "Layout preview", content: <LayoutEditor page="homepage" initial={getLayoutConfiguration("homepage")} /> },
@@ -76,6 +77,13 @@ export default async function AdminHomepagePage({
             <form className={styles.form} action="/api/admin/homepage-settings" method="POST">
               <input type="hidden" name="return_tab" value="ctas" />
               <label className={styles.field}><span className="label-small">Closing CTA button label</span><input name="homepage_cta_band_label" defaultValue={settings.homepage_cta_band_label} className={styles.input} /></label>
+              {hero && <>
+                <div className={styles.panelHeader}><h3 className="heading-04">Hero buttons</h3><p className="body-small">These labels and links are used in Business mode. Personal mode uses the fixed “See my work” and “Read articles” labels.</p></div>
+                <label className={styles.field}><span className="label-small">Primary button label</span><input name="cta_primary_label" defaultValue={hero.cta_primary_label} className={styles.input} /></label>
+                <label className={styles.field}><span className="label-small">Primary button link</span><input name="cta_primary_href" defaultValue={hero.cta_primary_href} className={styles.input} /></label>
+                <label className={styles.field}><span className="label-small">Secondary button label</span><input name="cta_secondary_label" defaultValue={hero.cta_secondary_label} className={styles.input} /></label>
+                <label className={styles.field}><span className="label-small">Secondary button link</span><input name="cta_secondary_href" defaultValue={hero.cta_secondary_href} className={styles.input} /></label>
+              </>}
               <label className={styles.field}><span className="label-small">Case study link label</span><input name="homepage_case_study_link_label" defaultValue={settings.homepage_case_study_link_label} className={styles.input} /></label>
               <label className={styles.field}><span className="label-small">Article link label</span><input name="homepage_article_link_label" defaultValue={settings.homepage_article_link_label} className={styles.input} /></label>
               <label className={styles.field}><span className="label-small">All insights link label</span><input name="homepage_insights_all_label" defaultValue={settings.homepage_insights_all_label} className={styles.input} /></label>
