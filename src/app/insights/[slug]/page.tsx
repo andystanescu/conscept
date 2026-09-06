@@ -14,6 +14,7 @@ import { BackButton } from "@/components/BackButton/BackButton";
 import styles from "./insight.module.css";
 import { contentMetadata, absoluteUrl } from "@/lib/seo";
 import { displayDate } from "@/lib/dateUtils";
+import { AuthorAvatar } from "@/components/AuthorAvatar/AuthorAvatar";
 
 export const dynamic = "force-dynamic";
 
@@ -71,7 +72,7 @@ export default async function InsightDetailPage({
 
             <div className={styles.byline}>
               <p className="body-small" style={{ color: "var(--text-secondary)" }}>
-                {insight.author}
+                <AuthorAvatar author={insight.author} />
               </p>
               <p className="body-small" style={{ color: "var(--text-tertiary)" }}>
                 {displayDate(insight.published_at)} &nbsp;•&nbsp; {readingMinutes} min read

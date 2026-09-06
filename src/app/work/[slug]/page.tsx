@@ -17,6 +17,9 @@ import { caseStudyAccessCookieName, verifyCaseStudyAccessToken } from "@/lib/cas
 import { contentMetadata, absoluteUrl } from "@/lib/seo";
 import { getSettings } from "@/lib/settings";
 import { displayDate } from "@/lib/dateUtils";
+import { AuthorAvatar } from "@/components/AuthorAvatar/AuthorAvatar";
+import { ShareArticle } from "@/components/ShareArticle/ShareArticle";
+import headerStyles from "@/app/insights/[slug]/insight.module.css";
 
 export const dynamic = "force-dynamic";
 
@@ -34,7 +37,7 @@ export default async function CaseStudyDetailPage({ params, searchParams }: { pa
   const authorName = getSettings().author_name;
   const rawPublishedAt = "published_at" in study && typeof study.published_at === "string" ? study.published_at : "";
   const publishedAt = rawPublishedAt ? displayDate(rawPublishedAt) : "";
-  const metadata = [study.category, study.year, authorName, publishedAt].filter(Boolean).join("  ·  ");
+  const publicationDetails = [publishedAt, study.year].filter(Boolean).join(" · ");
   let passwordHashes: string[] = [];
   try { const parsed = JSON.parse(study.password_hashes || "[]"); passwordHashes = Array.isArray(parsed) ? parsed.map((value) => typeof value === "string" ? value : value && typeof value === "object" && typeof value.hash === "string" ? value.hash : null).filter((value): value is string => Boolean(value)) : []; } catch { passwordHashes = []; }
   const cookieStore = await cookies();
@@ -75,16 +78,21 @@ export default async function CaseStudyDetailPage({ params, searchParams }: { pa
     }) }} />
     <Nav />
     <main className={styles.main}>
-      <section className={styles.hero}>
-        <div className={styles.heroCopy}>
+      <section className={headerStyles.hero}>
+        <div className={headerStyles.heroCopy}>
           <BackButton label="Back to work" fallbackHref="/work" />
-          <p className={styles.breadcrumb}><Link href="/work">Work</Link><span>/</span>{study.slug}</p>
+          <p className={`body-small ${headerStyles.breadcrumb}`}><Link href="/work">Work</Link>{study.category && <> &nbsp;/&nbsp; {study.category}</>}</p>
           <p className="label-eyebrow" style={{ color: "var(--text-accent)" }}>{study.category || study.eyebrow || "CASE STUDY"}</p>
           <h1 className="display-small">{study.title}</h1>
           <p className="body-large" style={{ color: "var(--text-secondary)" }}>{study.description}</p>
-          {metadata && <p className={styles.meta}>{metadata}</p>}
+          <div className={headerStyles.byline}>
+            <p className="body-small" style={{ color: "var(--text-secondary)" }}><AuthorAvatar author={authorName} /></p>
+            {publicationDetails && <p className="body-small" style={{ color: "var(--text-tertiary)" }}>{publicationDetails}</p>}
+            {study.tags && <p className={headerStyles.tags}>{study.tags}</p>}
+          </div>
+          <ShareArticle title={study.title} />
         </div>
-        {study.cover_image && <div className={styles.heroImage}><img src={study.cover_image} alt="" /></div>}
+        {study.cover_image && <div className={headerStyles.heroImage}><img src={study.cover_image} alt="" /></div>}
       </section>
       {metrics.length > 0 && <section className={`${styles.outcomes} section-dark`}><div className={`container ${styles.outcomesGrid}`}><div className={styles.outcomeIntro}><p className="label-eyebrow" style={{ color: "var(--text-accent)" }}>{study.outcome_eyebrow || "OUTCOMES"}</p><h2 className={styles.outcomeTitle}>{study.outcome_title}</h2></div><div className={styles.metrics}>{metrics.map((metric) => <div key={`${metric.value}-${metric.label}`} className={styles.metric}><strong>{metric.value}</strong><span>{metric.label}</span></div>)}</div></div></section>}
       <div className={`container ${styles.layout}`}>

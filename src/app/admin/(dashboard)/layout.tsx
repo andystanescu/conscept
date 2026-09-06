@@ -10,7 +10,7 @@ export default function AdminDashboardLayout({
   children: ReactNode;
 }) {
   return (
-    <div className={styles.shell}>
+    <div className={styles.shell} data-admin-shell>
       <aside className={styles.sidebar}>
         <div className={styles.brand}>
           <Logo variant="compact" />
@@ -26,7 +26,7 @@ export default function AdminDashboardLayout({
           </button>
         </form>
       </aside>
-      <main className={styles.content} data-scroll-region>{children}</main>
+      <main className={styles.content} data-scroll-region data-page-transition-content>{children}</main>
     </div>
   );
 }

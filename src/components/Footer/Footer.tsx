@@ -5,17 +5,11 @@ import { AdminBar } from "@/components/AdminBar/AdminBar";
 import { FooterLink } from "./FooterLink";
 import { getServiceItems } from "@/lib/serviceItems";
 import { getSettings } from "@/lib/settings";
-import { getPublishedPage } from "@/lib/pages";
+import { getNavLinks, getPublishedPage } from "@/lib/pages";
 import styles from "./Footer.module.css";
 
-const COMPANY_LINKS = [
-  { label: "About", href: "/about" },
-  { label: "Work", href: "/work" },
-  { label: "Insights", href: "/insights" },
-  { label: "Services", href: "/services" },
-];
-
 export function Footer() {
+  const navigationLinks = getNavLinks();
   const settings = getSettings();
   const services = getServiceItems();
   const copyrightName = settings.logo_identity === "personal" ? "Andrei Stanescu" : "ConScept";
@@ -52,7 +46,7 @@ export function Footer() {
 
             <div className={styles.column}>
               <p className="label-small">Navigation</p>
-              {COMPANY_LINKS.map((link) => (
+              {navigationLinks.map((link) => (
                 <FooterLink
                   key={link.href}
                   href={link.href}
