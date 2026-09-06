@@ -5,6 +5,9 @@
   overflow: hidden;
   overscroll-behavior: none;
   background: var(--bg-canvas);
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
 }
 
 .sidebar {
@@ -19,8 +22,14 @@
   padding: var(--space-400);
   background: var(--bg-surface);
   border-right: 1px solid var(--border-default);
-  overflow-y: auto;
-  overscroll-behavior: contain;
+  overflow: hidden;
+  overscroll-behavior: none;
+  scrollbar-width: none;
+}
+
+.sidebar::-webkit-scrollbar,
+.content::-webkit-scrollbar {
+  display: none;
 }
 
 .brand {
@@ -80,6 +89,40 @@
   overflow-y: auto;
   overscroll-behavior: contain;
   padding: var(--space-600);
+  overflow-x: hidden;
+  scrollbar-width: none;
+}
+
+/* Shared shell regions for all non-editor Admin pages. The page viewport is
+   the only scrolling surface; headers stay opaque and anchored to its top. */
+.content > .pageHeader,
+.content > .header,
+.content > [data-admin-about-header] {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  box-sizing: border-box;
+  background: var(--bg-canvas);
+}
+
+.content > .pageHeader {
+  margin-top: calc(-1 * var(--space-600));
+  padding-top: var(--space-600);
+}
+
+.content > .header {
+  margin-top: calc(-1 * var(--space-600));
+  padding-top: var(--space-600);
+}
+
+.content > h1.heading-01 {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  box-sizing: border-box;
+  margin-top: calc(-1 * var(--space-600));
+  padding-top: var(--space-600);
+  background: var(--bg-canvas);
 }
 
 .content h1 {
@@ -133,3 +176,19 @@
   padding: var(--space-100) 0 var(--space-200);
   background: var(--bg-canvas);
 }
+<<<<<<< HEAD
+=======
+
+.content:has(.editorForm) {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  transform: none !important;
+  filter: none !important;
+  perspective: none !important;
+  contain: none !important;
+  will-change: auto;
+  animation: none !important;
+}
+>>>>>>> c59f3eb (Update admin editor shell and content forms)

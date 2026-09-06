@@ -4,6 +4,7 @@ import type { CaseStudy } from "@/data/caseStudies";
 import { getCaseStudyMetrics } from "@/data/caseStudies";
 import { CaseStudyEditor } from "@/components/admin/CaseStudyEditor/CaseStudyEditor";
 import { getCaseStudyAssessment } from "@/data/caseStudies";
+import { getSettings } from "@/lib/settings";
 
 export const dynamic = "force-dynamic";
 
@@ -48,7 +49,7 @@ export default async function EditCaseStudyPage({
   return (
     <>
       {error && <p style={{ color: "var(--border-error)" }}>{error}</p>}
-      <CaseStudyEditor study={clientStudy} metrics={metrics} assessment={assessment} services={services.map((service) => ({ ...service }))} passwordRequired={Boolean(study.password_required)} passwordEntries={passwordEntries} />
+      <CaseStudyEditor study={clientStudy} metrics={metrics} assessment={assessment} services={services.map((service) => ({ ...service }))} passwordRequired={Boolean(study.password_required)} passwordEntries={passwordEntries} authorAvatarUrl={getSettings().about_hero_image} />
     </>
   );
 }

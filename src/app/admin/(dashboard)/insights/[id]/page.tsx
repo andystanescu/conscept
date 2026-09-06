@@ -14,5 +14,10 @@ export default async function EditInsightPage({ params, searchParams }: { params
   if (!insight) notFound();
   const categories = getServiceItems().map((service) => ({ id: service.id, title: service.title }));
   const clientInsight = { ...insight };
+<<<<<<< HEAD
   return <>{error && <p style={{ color: "var(--border-error)" }}>{error}</p>}<InsightEditor action={`/api/admin/insights/${insight.id}`} categories={categories} settingsAuthor={getSettings().author_name} insight={clientInsight} /></>;
+=======
+  const settings = getSettings();
+  return <>{error && <p style={{ color: "var(--border-error)" }}>{error}</p>}<InsightEditor action={`/api/admin/insights/${insight.id}`} categories={categories} settingsAuthor={settings.author_name} authorAvatarUrl={settings.about_hero_image} insight={clientInsight} /></>;
+>>>>>>> c59f3eb (Update admin editor shell and content forms)
 }

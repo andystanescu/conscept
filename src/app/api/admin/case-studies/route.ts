@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
   const ogImage = String(form.get("og_image") ?? "").trim();
   const noIndex = form.get("no_index") === "on" ? 1 : 0;
   const body = applyHeadingAccents(String(form.get("body") ?? "").trim());
-  const published = form.get("published") ? 1 : 0;
+  const published = form.get("intent") === "publish" ? 1 : 0;
   const author = getSettings().author_name;
   const publishedAt = dateInputValue(String(form.get("published_at") ?? "").trim());
 

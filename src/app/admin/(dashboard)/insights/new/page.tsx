@@ -5,5 +5,10 @@ import { InsightEditor } from "@/components/admin/InsightEditor/InsightEditor";
 export default async function NewInsightPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
   const { error } = await searchParams;
   const categories = getServiceItems().map((service) => ({ id: service.id, title: service.title }));
+<<<<<<< HEAD
   return <>{error && <p style={{ color: "var(--border-error)" }}>{error}</p>}<InsightEditor action="/api/admin/insights" categories={categories} settingsAuthor={getSettings().author_name} /></>;
+=======
+  const settings = getSettings();
+  return <>{error && <p style={{ color: "var(--border-error)" }}>{error}</p>}<InsightEditor action="/api/admin/insights" categories={categories} settingsAuthor={settings.author_name} authorAvatarUrl={settings.about_hero_image} /></>;
+>>>>>>> c59f3eb (Update admin editor shell and content forms)
 }
