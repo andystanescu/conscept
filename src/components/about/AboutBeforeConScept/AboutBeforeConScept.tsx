@@ -1,12 +1,12 @@
-import { getExperiences, getVisibleSection } from "@/lib/about";
+import { getExperiences, getVisibleSection, getSection } from "@/lib/about";
 import { getSettings } from "@/lib/settings";
 import styles from "./AboutBeforeConScept.module.css";
 import { displayMonthYear } from "@/lib/dateUtils";
 import { RichContent } from "@/components/RichContent/RichContent";
 
-export function AboutBeforeConScept() {
+export function AboutBeforeConScept({ preview = false }: { preview?: boolean } = {}) {
   if (getSettings().logo_identity !== "personal") return null;
-  const section = getVisibleSection("before_conscept");
+  const section = preview ? getSection("before_conscept") : getVisibleSection("before_conscept");
   if (!section) return null;
   const experiences = getExperiences();
 

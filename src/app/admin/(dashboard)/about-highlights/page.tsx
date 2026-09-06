@@ -20,7 +20,7 @@ export default function AdminAboutHighlightsPage() {
           New item
         </Link>
       </div>
-      <p className={`body-small ${styles.helper}`} style={{ maxWidth: 640 }}>
+      <p className={`body-small ${styles.helper}`}>
         The 3 items shown in the About page&apos;s Highlights section. Drag to
         reorder, or use the arrows.
       </p>

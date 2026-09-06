@@ -20,7 +20,7 @@ export default function AdminServicesPage() {
           New service
         </Link>
       </div>
-      <p className={`body-small ${styles.helper}`} style={{ maxWidth: 640 }}>
+      <p className={`body-small ${styles.helper}`}>
         Listed on /services. Toggle &ldquo;Show on homepage&rdquo; on a
         service&apos;s edit screen to also feature it in the homepage
         Services section. Drag to reorder, or use the arrows.

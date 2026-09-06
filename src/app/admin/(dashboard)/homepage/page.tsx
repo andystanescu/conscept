@@ -1,4 +1,6 @@
 import { getAllSections } from "@/lib/homepage";
+import { LayoutEditor } from "@/components/admin/LayoutEditor/LayoutEditor";
+import { getLayoutConfiguration } from "@/lib/layoutConfiguration";
 import { getSettings } from "@/lib/settings";
 import { MetadataFields } from "@/components/admin/MetadataFields/MetadataFields";
 import { AdminContentTabs } from "@/components/admin/AdminContentTabs/AdminContentTabs";
@@ -32,13 +34,14 @@ export default async function AdminHomepagePage({
       <div className={styles.toolbar}>
         <h1 className="heading-01">Homepage</h1>
       </div>
-      <p className={`body-small ${styles.helper}`} style={{ maxWidth: 640 }}>
+      <p className={`body-small ${styles.helper}`}>
         Nav, Hero, and Footer are always in that position. The sections in
         between can be reordered — drag them, or use the arrows. Wrap a word
         in #like this# to color it orange.
       </p>
 
-      <AdminContentTabs initialTab={tab === "ctas" || tab === "metadata" ? tab : "sections"} tabs={[
+      <AdminContentTabs initialTab={tab === "ctas" || tab === "metadata" || tab === "layout" ? tab : "sections"} tabs={[
+        { id: "layout", label: "Layout preview", content: <LayoutEditor page="homepage" initial={getLayoutConfiguration("homepage")} /> },
         {
           id: "sections",
           label: "Sections",

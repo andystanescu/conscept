@@ -20,7 +20,7 @@ export default function AdminPagesPage() {
       <div className={styles.toolbar}>
         <h1 className="heading-01">Main navigation</h1>
       </div>
-      <p className={`body-small ${styles.helper}`} style={{ maxWidth: 640 }}>
+      <p className={`body-small ${styles.helper}`}>
         Drag the items below to set the order of the public header. The list
         includes pages managed in their own admin sections, such as Work,
         Services, Approach, Insights, and About. Use each page&apos;s settings to
@@ -53,7 +53,7 @@ export default function AdminPagesPage() {
       <div className={styles.toolbar} style={{ marginTop: "var(--space-1200)" }}>
         <h2 className="heading-02">Other pages</h2>
       </div>
-      <p className={`body-small ${styles.helper}`} style={{ maxWidth: 640 }}>
+      <p className={`body-small ${styles.helper}`}>
         Pages that are not currently part of the public main navigation.
       </p>
       <ul className={styles.list}>

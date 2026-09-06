@@ -239,6 +239,13 @@
   max-width: none;
 }
 
+/* Descriptions are content fields rather than short-form inputs. Let them
+   use the full editor width before the text wraps. */
+.field textarea[name="description"],
+.field textarea[name$="_description"] {
+  max-width: none;
+}
+
 .metadataGrid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

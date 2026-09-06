@@ -17,7 +17,7 @@ export default function AdminAboutExperiencesPage() {
         <p className="heading-02">Before ConScept</p>
         <Link href="/admin/about-experiences/new" className={styles.newLink}>New experience</Link>
       </div>
-      <p className={`body-small ${styles.helper}`} style={{ maxWidth: 640 }}>
+      <p className={`body-small ${styles.helper}`}>
         Edit the eyebrow and title through the section card, then add the experience cards shown in Personal mode.
       </p>
       {section && (

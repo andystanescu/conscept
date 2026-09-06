@@ -1,4 +1,7 @@
 import { getAllSections } from "@/lib/about";
+import { LayoutEditor } from "@/components/admin/LayoutEditor/LayoutEditor";
+import { getLayoutConfiguration } from "@/lib/layoutConfiguration";
+import { AdminContentTabs } from "@/components/admin/AdminContentTabs/AdminContentTabs";
 import { ReorderableList } from "@/components/admin/ReorderableList/ReorderableList";
 import { AdminTabs } from "@/components/admin/AdminTabs/AdminTabs";
 import { InlineSectionCard } from "@/components/admin/InlineSectionCard/InlineSectionCard";
@@ -25,13 +28,16 @@ export default function AdminAboutPage() {
     <>
       <h1 className="heading-01">About</h1>
       <AdminTabs tabs={ABOUT_TABS} active="/admin/about" />
-      <p className={`body-small ${styles.helper}`} style={{ maxWidth: 640 }}>
+      <p className={`body-small ${styles.helper}`}>
         Nav, Hero, and Footer are always in that position. The sections in
         between can be reordered — drag them, or use the arrows. Philosophy
         and Highlights each have their own item list, in the tabs above. Wrap
         a word in #like this# to color it orange.
       </p>
 
+      <AdminContentTabs initialTab="layout" tabs={[
+        { id: "layout", label: "Layout preview", content: <LayoutEditor page="about" initial={getLayoutConfiguration("about")} /> },
+        { id: "sections", label: "Section content", content: <>
       <ul className={styles.list}>{fixedSections.map((section) => <li key={section.key} className={styles.listItem}><InlineSectionCard section={section} label={LABELS[section.key] ?? section.key} parent="about" fixed /></li>)}</ul>
 
       <ReorderableList
@@ -65,6 +71,8 @@ export default function AdminAboutPage() {
           ),
         }))}
       />
+        </> },
+      ]} />
     </>
   );
 }

@@ -20,7 +20,7 @@ export default function AdminAboutPhilosophyPage() {
           New item
         </Link>
       </div>
-      <p className={`body-small ${styles.helper}`} style={{ maxWidth: 640 }}>
+      <p className={`body-small ${styles.helper}`}>
         The 4 items shown in the About page&apos;s Philosophy section. Drag to
         reorder, or use the arrows.
       </p>

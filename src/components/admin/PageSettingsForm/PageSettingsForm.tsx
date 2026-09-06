@@ -26,7 +26,7 @@ export function PageSettingsForm({ page, error, redirect, note }: PageSettingsFo
   return (
     <>
       {note && (
-        <p className={`body-small ${styles.helper}`} style={{ maxWidth: 640 }}>
+        <p className={`body-small ${styles.helper}`}>
           {note}
         </p>
       )}
