@@ -15,16 +15,12 @@
   pointer-events: none;
 }
 
-<<<<<<< HEAD
-=======
 .page > [data-admin-shell] > [data-page-transition-content]:has([data-editor-page]),
 .pageExit > [data-admin-shell] > [data-page-transition-content]:has([data-editor-page]) {
   transform: none !important;
   animation: none !important;
   will-change: auto !important;
 }
-
->>>>>>> c59f3eb (Update admin editor shell and content forms)
 /* Content tabs keep the persistent admin page header in place while the
    section below it changes. Sidebar navigation continues to use pageExit. */
 .pageTabExit > [data-admin-shell] > [data-page-transition-content] > :not([data-admin-about-header]):not(.editorHeader) {

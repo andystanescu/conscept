@@ -66,21 +66,12 @@ export function CaseStudyEditor({ study, metrics, assessment, services, password
     if (saveStatusTimerRef.current) clearTimeout(saveStatusTimerRef.current);
   }, []);
   return (
-<<<<<<< HEAD
-    <form ref={formRef} className={`${adminStyles.form} ${styles.editorForm}`} action={`/api/admin/case-studies/${study.id}`} method="POST" encType="multipart/form-data" onInput={scheduleDraftSave} onChange={scheduleDraftSave}>
-      <header className={styles.editorHeader}>
-        <div className={styles.editorHeading}><p className={styles.editorEyebrow}>ADMIN · CASE STUDY</p><h1>{study.title}</h1></div>
-        <div className={styles.editorActions}>{saveState !== "idle" && <span className={styles.saveStatus}>{saveState === "saving" ? "Saving…" : saveState === "error" ? "Save failed" : "Saved"}</span>}<button type="submit" name="intent" value="publish" className={adminStyles.submit}>Publish</button></div>
-        <div className={styles.tabs} role="tablist" aria-label="Case study details">
-        {(["content", "details", "outcomes", "assessment", "metadata", "visibility"] as const).map((value) => (
-=======
     <form ref={formRef} data-editor-page className={`${adminStyles.form} ${styles.editorForm}`} action={action ?? `/api/admin/case-studies/${study.id}`} method="POST" encType="multipart/form-data" onInput={scheduleDraftSave} onChange={scheduleDraftSave}>
       <header className={styles.editorHeader}>
           <div className={styles.editorHeading}><p className={styles.editorEyebrow}>ADMIN · CASE STUDY</p><h1>{editing ? study.title : "New case study"}</h1></div>
           <div className={styles.editorActions}>{saveState !== "idle" && <span className={styles.saveStatus}>{saveState === "saving" ? "Saving…" : saveState === "error" ? "Save failed" : "Saved"}</span>}<button type="submit" name="intent" value={editing ? "publish" : "draft"} className={adminStyles.submit}>{editing ? "Publish" : "Create case study"}</button></div>
         <div className={styles.tabs} role="tablist" aria-label="Case study details">
         {(["details", "outcomes", "assessment", "content", "metadata", "visibility"] as const).map((value) => (
->>>>>>> c59f3eb (Update admin editor shell and content forms)
           <button key={value} id={`case-study-tab-${value}`} type="button" role="tab" aria-selected={tab === value} aria-controls={`case-study-panel-${value}`} tabIndex={tab === value ? 0 : -1} className={tab === value ? styles.tabActive : styles.tab} onClick={() => setTab(value)}>
             {value === "details" ? "Details" : value === "outcomes" ? "Outcomes" : value === "assessment" ? "Assessment" : value === "metadata" ? "Metadata and SEO" : value === "visibility" ? "Visibility" : "Content"}
           </button>
@@ -132,8 +123,6 @@ export function CaseStudyEditor({ study, metrics, assessment, services, password
         <div className={styles.passwordManager}><div className={styles.passwordManagerHeader}><div><h2 className="heading-03">Accepted passwords</h2><p className="body-small">{passwordEntries.length} active {passwordEntries.length === 1 ? "password" : "passwords"}. New passwords remain visible until this draft is saved.</p></div></div><PasswordManager passwordEntries={passwordEntries} onCommit={scheduleDraftSave} /></div>
       </section>
 
-<<<<<<< HEAD
-=======
       </div>
       <aside className={styles.sidePanels} aria-label="Case study summary">
         <div className={styles.sidePanel}>
@@ -155,8 +144,6 @@ export function CaseStudyEditor({ study, metrics, assessment, services, password
         </div>
       </aside>
       </div>
-
->>>>>>> c59f3eb (Update admin editor shell and content forms)
     </form>
   );
 }

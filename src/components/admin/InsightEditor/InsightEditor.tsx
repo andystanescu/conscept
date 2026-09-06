@@ -16,26 +16,16 @@ export function InsightEditor({ action, categories, settingsAuthor, authorAvatar
   const editing = Boolean(insight);
   const [tab, setTab] = useState<"details" | "body" | "metadata">("details");
   const value = (key: keyof Insight) => insight?.[key] ?? "";
-<<<<<<< HEAD
-  return <form className={`${styles.form} ${editorStyles.editorForm}`} action={action} method="POST" encType="multipart/form-data">
-    <header className={editorStyles.editorHeader}>
-      <div className={editorStyles.editorHeading}><p className={editorStyles.editorEyebrow}>ADMIN · INSIGHT</p><h1>{editing ? String(value("title")) : "New article"}</h1></div>
-      <div className={editorStyles.editorActions}><button type="submit" className={editorStyles.headerSubmit}>{editing ? "Save changes" : "Create article"}</button></div>
-=======
   return <form data-editor-page className={`${styles.form} ${editorStyles.editorForm}`} action={action} method="POST" encType="multipart/form-data">
     <header className={editorStyles.editorHeader}>
       <div className={editorStyles.editorHeading}><p className={editorStyles.editorEyebrow}>ADMIN · INSIGHT</p><h1>{editing ? String(value("title")) : "New article"}</h1></div>
       <div className={editorStyles.editorActions}><button type="submit" name="intent" value={editing ? "publish" : "draft"} className={editorStyles.headerSubmit}>{editing ? "Save changes" : "Create article"}</button></div>
->>>>>>> c59f3eb (Update admin editor shell and content forms)
       <div className={editorStyles.tabs} role="tablist" aria-label="Insight details">
         {(["details", "body", "metadata"] as const).map((value) => <button key={value} type="button" role="tab" aria-selected={tab === value} aria-controls={`insight-panel-${value}`} className={tab === value ? editorStyles.tabActive : editorStyles.tab} onClick={() => setTab(value)}>{value === "metadata" ? "Metadata and SEO" : value === "body" ? "Body" : "Details"}</button>)}
       </div>
     </header>
-<<<<<<< HEAD
-=======
     <div className={editorStyles.editorLayout}>
     <div className={editorStyles.editorMain}>
->>>>>>> c59f3eb (Update admin editor shell and content forms)
     <section id="insight-panel-details" role="tabpanel" aria-label="Details" hidden={tab !== "details"} className={editorStyles.panel}>
         <Field label="Slug (used in the URL: /insights/…)" name="slug" value={value("slug")} required />
         <Field label="Title" name="title" value={value("title")} required />
@@ -43,18 +33,6 @@ export function InsightEditor({ action, categories, settingsAuthor, authorAvatar
         <CategoryCards value={String(value("category"))} categories={categories} />
         <TagEditor initialValue={String(value("tags"))} />
         <label className={styles.field}><span className="label-small">Published date</span><input type="date" name="published_at" defaultValue={dateInputValue(String(value("published_at")) || todayInputValue())} className={styles.input} /></label>
-<<<<<<< HEAD
-        <label className={styles.checkboxField}><input type="checkbox" name="published" defaultChecked={editing ? Boolean(insight?.published) : true} /><span className={styles.switch} aria-hidden="true" /><span className="body-default">Published</span></label>
-    </section>
-    <section id="insight-panel-body" role="tabpanel" aria-label="Body" hidden={tab !== "body"} className={editorStyles.panel}>
-        <label className={`${styles.field} ${styles.fieldWide}`}><span className="label-small">Cover image (shown at the top of the article)</span><ImageField name="cover_image" currentUrl={String(value("cover_image"))} /></label>
-        <label className={`${styles.field} ${styles.fieldWide}`}><span className="label-small">Thumbnail image (shown on cards and listings)</span><ImageField name="thumbnail_image" currentUrl={String(value("thumbnail_image"))} /></label>
-        <label className={`${styles.field} ${styles.fieldWide}`}><span className="label-small">Body</span><RichTextEditor name="body" defaultValue={String(value("body"))} /></label>
-    </section>
-    <section id="insight-panel-metadata" role="tabpanel" aria-label="Metadata and SEO" hidden={tab !== "metadata"} className={editorStyles.panel}>
-      <div className={styles.helper}><span className="body-default">Search appearance</span><p className="body-small">Set the title, description, canonical URL, and social image used for this article.</p></div><MetadataFields values={insight} />
-    </section>
-=======
         {editing && <label className={styles.checkboxField}><input type="checkbox" name="published" defaultChecked={Boolean(insight?.published)} /><span className={styles.switch} aria-hidden="true" /><span className="body-default">Published</span></label>}
     </section>
     <section id="insight-panel-body" role="tabpanel" aria-label="Body" hidden={tab !== "body"} className={editorStyles.panel}>
@@ -84,7 +62,6 @@ export function InsightEditor({ action, categories, settingsAuthor, authorAvatar
       </div>
     </aside>
     </div>
->>>>>>> c59f3eb (Update admin editor shell and content forms)
   </form>;
 }
 

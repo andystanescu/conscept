@@ -176,9 +176,6 @@
   padding: var(--space-100) 0 var(--space-200);
   background: var(--bg-canvas);
 }
-<<<<<<< HEAD
-=======
-
 .content:has(.editorForm) {
   position: relative;
   display: flex;
@@ -191,4 +188,3 @@
   will-change: auto;
   animation: none !important;
 }
->>>>>>> c59f3eb (Update admin editor shell and content forms)

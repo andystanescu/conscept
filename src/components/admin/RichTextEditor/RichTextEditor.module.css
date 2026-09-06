@@ -9,17 +9,10 @@
   box-shadow: inset 0 0 0 2px var(--accent-foundation);
 }
 
-<<<<<<< HEAD
 .toolbar {
   position: sticky;
-  top: var(--editor-sticky-header-offset, var(--space-300));
+  top: 0;
   z-index: 4;
-=======
-  .toolbar {
-    position: sticky;
-    top: 0;
-    z-index: 4;
->>>>>>> c59f3eb (Update admin editor shell and content forms)
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
