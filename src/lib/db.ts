@@ -320,10 +320,29 @@ const DEFAULT_SETTINGS: Record<string, string> = {
 // The file is intentionally separate from the SQLite database so credentials,
 // sessions and contact submissions cannot be carried into production.
 type SeedRecord = Record<string, unknown>;
-type SeedPayload = { format?: string; version?: number; caseStudies?: SeedRecord[]; insights?: SeedRecord[] };
+type SeedPayload = {
+  format?: string;
+  version?: number;
+  caseStudies?: SeedRecord[];
+  insights?: SeedRecord[];
+  pages?: SeedRecord[];
+  pageConfiguration?: SeedRecord[];
+  experiences?: SeedRecord[];
+  configuration?: {
+    settings?: SeedRecord[];
+    homepageSections?: SeedRecord[];
+    services?: SeedRecord[];
+    approachSteps?: SeedRecord[];
+    aboutSections?: SeedRecord[];
+    aboutPhilosophyItems?: SeedRecord[];
+    aboutHighlightItems?: SeedRecord[];
+  };
+};
 
 function seedContentBaseline() {
-  const seedPath = join(dataDir, "content-seed.json");
+  const persistentSeedPath = join(dataDir, "content-seed.json");
+  const packagedSeedPath = join(process.cwd(), "data", "content-seed.json");
+  const seedPath = existsSync(persistentSeedPath) ? persistentSeedPath : packagedSeedPath;
   if (!existsSync(seedPath)) return;
 
   let payload: SeedPayload;
@@ -350,8 +369,10 @@ function seedContentBaseline() {
       `INSERT INTO case_studies
         (slug, eyebrow, title, description, tags, position, published, body,
          cover_image, thumbnail_image, category, year, outcome_eyebrow,
-         outcome_title, metrics, assessment, password_required, password_hashes)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+         outcome_title, metrics, assessment, password_required, password_hashes,
+         author, published_at, meta_title, meta_description, meta_keywords,
+         canonical_url, og_image, no_index)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     );
     for (const record of payload.caseStudies) {
       const slug = asText(record, "slug").trim();
@@ -363,7 +384,10 @@ function seedContentBaseline() {
         asText(record, "body"), asText(record, "cover_image"), asText(record, "thumbnail_image"),
         asText(record, "category"), asText(record, "year"), asText(record, "outcome_eyebrow", "OUTCOMES"),
         asText(record, "outcome_title"), asJson(record, "metrics", []), asJson(record, "assessment", {}),
-        asNumber(record, "password_required"), asJson(record, "password_hashes", [])
+        asNumber(record, "password_required"), asJson(record, "password_hashes", []),
+        asText(record, "author", "Andrei Stanescu"), asText(record, "published_at"),
+        asText(record, "meta_title"), asText(record, "meta_description"), asText(record, "meta_keywords"),
+        asText(record, "canonical_url"), asText(record, "og_image"), asNumber(record, "no_index")
       );
     }
   }
@@ -373,8 +397,9 @@ function seedContentBaseline() {
     const insert = db.prepare(
       `INSERT INTO insights
         (slug, title, excerpt, body, published_at, position, published,
-         cover_image, thumbnail_image, category, author, tags)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+         cover_image, thumbnail_image, category, author, tags, meta_title,
+         meta_description, meta_keywords, canonical_url, og_image, no_index)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     );
     for (const record of payload.insights) {
       const slug = asText(record, "slug").trim();
@@ -384,9 +409,63 @@ function seedContentBaseline() {
         slug, title, asText(record, "excerpt"), asText(record, "body"),
         asText(record, "published_at"), asNumber(record, "position"), asNumber(record, "published", 1),
         asText(record, "cover_image"), asText(record, "thumbnail_image"), asText(record, "category"),
-        asText(record, "author", "Andrei Stanescu"), asText(record, "tags")
+        asText(record, "author", "Andrei Stanescu"), asText(record, "tags"), asText(record, "meta_title"),
+        asText(record, "meta_description"), asText(record, "meta_keywords"), asText(record, "canonical_url"),
+        asText(record, "og_image"), asNumber(record, "no_index")
       );
     }
+  }
+
+  const configuration = payload.configuration ?? {};
+  const saveSetting = db.prepare("INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO NOTHING");
+  for (const record of configuration.settings ?? []) {
+    const key = asText(record, "key").trim();
+    if (key) saveSetting.run(key, asText(record, "value"));
+  }
+
+  if ((db.prepare("SELECT COUNT(*) AS n FROM pages").get() as { n: number }).n === 0) {
+    const pages = payload.pages ?? payload.pageConfiguration ?? [];
+    const insert = db.prepare(`INSERT OR IGNORE INTO pages (slug, eyebrow, title, body, show_in_nav, visible, nav_label, position, meta_title, meta_description, meta_keywords, canonical_url, og_image, no_index) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`);
+    for (const record of pages) {
+      const slug = asText(record, "slug").trim();
+      const title = asText(record, "title").trim();
+      if (slug && title) insert.run(slug, asText(record, "eyebrow"), title, asText(record, "body"), asNumber(record, "show_in_nav"), asNumber(record, "visible", 1), asText(record, "nav_label"), asNumber(record, "position"), asText(record, "meta_title"), asText(record, "meta_description"), asText(record, "meta_keywords"), asText(record, "canonical_url"), asText(record, "og_image"), asNumber(record, "no_index"));
+    }
+  }
+
+  if ((db.prepare("SELECT COUNT(*) AS n FROM homepage_sections").get() as { n: number }).n === 0) {
+    const insert = db.prepare(`INSERT OR IGNORE INTO homepage_sections (key, eyebrow, headline, description, position, fixed, cta_primary_label, cta_primary_href, cta_secondary_label, cta_secondary_href, visible) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`);
+    for (const record of configuration.homepageSections ?? []) insert.run(asText(record, "key"), asText(record, "eyebrow"), asText(record, "headline"), asText(record, "description"), asNumber(record, "position"), asNumber(record, "fixed"), asText(record, "cta_primary_label"), asText(record, "cta_primary_href"), asText(record, "cta_secondary_label"), asText(record, "cta_secondary_href"), asNumber(record, "visible", 1));
+  }
+
+  if ((db.prepare("SELECT COUNT(*) AS n FROM service_items").get() as { n: number }).n === 0) {
+    const insert = db.prepare(`INSERT OR IGNORE INTO service_items (id, slug, title, description, icon, body, show_on_homepage, position, published, card_size) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`);
+    for (const record of configuration.services ?? []) { const slug = asText(record, "slug").trim(); if (slug) insert.run(asNumber(record, "id"), slug, asText(record, "title"), asText(record, "description"), asText(record, "icon"), asText(record, "body"), asNumber(record, "show_on_homepage"), asNumber(record, "position"), asNumber(record, "published", 1), asText(record, "card_size", "standard")); }
+  }
+
+  if ((db.prepare("SELECT COUNT(*) AS n FROM approach_steps").get() as { n: number }).n === 0) {
+    const insert = db.prepare(`INSERT OR IGNORE INTO approach_steps (id, title, description, icon, show_on_homepage, position, published) VALUES (?, ?, ?, ?, ?, ?, ?)`);
+    for (const record of configuration.approachSteps ?? []) { const title = asText(record, "title").trim(); if (title) insert.run(asNumber(record, "id"), title, asText(record, "description"), asText(record, "icon"), asNumber(record, "show_on_homepage"), asNumber(record, "position"), asNumber(record, "published", 1)); }
+  }
+
+  if ((db.prepare("SELECT COUNT(*) AS n FROM about_sections").get() as { n: number }).n === 0) {
+    const insert = db.prepare(`INSERT OR IGNORE INTO about_sections (key, eyebrow, headline, description, position, fixed, visible) VALUES (?, ?, ?, ?, ?, ?, ?)`);
+    for (const record of configuration.aboutSections ?? []) { const key = asText(record, "key").trim(); if (key) insert.run(key, asText(record, "eyebrow"), asText(record, "headline"), asText(record, "description"), asNumber(record, "position"), asNumber(record, "fixed"), asNumber(record, "visible", 1)); }
+  }
+
+  if ((db.prepare("SELECT COUNT(*) AS n FROM about_philosophy_items").get() as { n: number }).n === 0) {
+    const insert = db.prepare(`INSERT OR IGNORE INTO about_philosophy_items (id, title, description, icon, position, published) VALUES (?, ?, ?, ?, ?, ?)`);
+    for (const record of configuration.aboutPhilosophyItems ?? []) { const title = asText(record, "title").trim(); if (title) insert.run(asNumber(record, "id"), title, asText(record, "description"), asText(record, "icon"), asNumber(record, "position"), asNumber(record, "published", 1)); }
+  }
+
+  if ((db.prepare("SELECT COUNT(*) AS n FROM about_highlight_items").get() as { n: number }).n === 0) {
+    const insert = db.prepare(`INSERT OR IGNORE INTO about_highlight_items (id, title, description, icon, position, published) VALUES (?, ?, ?, ?, ?, ?)`);
+    for (const record of configuration.aboutHighlightItems ?? []) { const title = asText(record, "title").trim(); if (title) insert.run(asNumber(record, "id"), title, asText(record, "description"), asText(record, "icon"), asNumber(record, "position"), asNumber(record, "published", 1)); }
+  }
+
+  if ((db.prepare("SELECT COUNT(*) AS n FROM about_experiences").get() as { n: number }).n === 0) {
+    const insert = db.prepare(`INSERT OR IGNORE INTO about_experiences (id, start_date, end_date, job_title, company_name, business_profile, description, position, published) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`);
+    for (const record of payload.experiences ?? []) { const title = asText(record, "job_title").trim(); if (title) insert.run(asNumber(record, "id"), asText(record, "start_date"), asText(record, "end_date"), title, asText(record, "company_name"), asText(record, "business_profile"), asText(record, "description"), asNumber(record, "position"), asNumber(record, "published", 1)); }
   }
 }
 

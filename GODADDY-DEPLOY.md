@@ -39,6 +39,14 @@ the current upload files into `UPLOADS_DIR`, configure the environment
 variables, and restart the application. Keep regular content exports as an
 additional backup.
 
+The tracked `data/content-seed.json` is a fallback baseline for a genuinely
+empty database. It restores the full exported content configuration: case
+studies, insights, page metadata and visibility, homepage sections and CTAs,
+services, approach steps, About sections and items, experiences, and settings.
+It only fills empty tables or missing settings; it does not overwrite content
+that already exists. Uploaded files are restored only when they are included
+in the export's assets and the files are copied into `UPLOADS_DIR`.
+
 If `ADMIN_USERNAME` and `ADMIN_PASSWORD_HASH` are not set, open `/admin/login`
 and click the ConScept logo to create the first admin password. After that,
 clicking the logo opens password recovery; recovery verifies the current
