@@ -24,9 +24,20 @@ ADMIN_PASSWORD_HASH=<bcrypt hash for the chosen admin password>
 SESSION_SECRET=<long random secret>
 RESEND_API_KEY=<optional>
 CONTACT_EMAIL_FROM=<optional verified sender address>
+
+# Required for content persistence across application rebuilds. Set these to
+# writable directories outside the application root/release directory.
+DATA_DIR=/home/<account>/conscept-data
+UPLOADS_DIR=/home/<account>/conscept-data/uploads
 ```
 
-The admin panel is available at `/admin`. The database is included in the bundle so the current content is preserved. Keep regular backups of the `data/conscept.db` file.
+The admin panel is available at `/admin`. `DATA_DIR` stores the SQLite database
+and `UPLOADS_DIR` stores uploaded files. Both must be outside the application
+directory if GoDaddy replaces that directory during a rebuild. Create the
+directories first, copy the current `data/conscept.db` into `DATA_DIR`, copy
+the current upload files into `UPLOADS_DIR`, configure the environment
+variables, and restart the application. Keep regular content exports as an
+additional backup.
 
 If `ADMIN_USERNAME` and `ADMIN_PASSWORD_HASH` are not set, open `/admin/login`
 and click the ConScept logo to create the first admin password. After that,

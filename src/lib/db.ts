@@ -7,8 +7,12 @@ import { join } from "path";
 // set up on every machine, and wouldn't be portable across dev/prod
 // platforms anyway). Production (GoDaddy Node hosting) needs a matching
 // recent Node version for this to work the same way.
-const dataDir = join(process.cwd(), "data");
-if (!existsSync(dataDir)) mkdirSync(dataDir, { recursive: true });
+// GoDaddy deployments can replace the application directory. Point DATA_DIR
+// at a writable directory outside the release folder in production so the
+// database survives rebuilds and application restarts. Local development
+// keeps using ./data when DATA_DIR is not set.
+const dataDir = process.env.DATA_DIR?.trim() || join(process.cwd(), "data");
+if (!existsSync(/*turbopackIgnore: true*/ dataDir)) mkdirSync(/*turbopackIgnore: true*/ dataDir, { recursive: true });
 const dbPath = join(dataDir, "conscept.db");
 
 // Reuse one connection across hot-reloads in dev and across requests in
@@ -315,7 +319,7 @@ type SeedRecord = Record<string, unknown>;
 type SeedPayload = { format?: string; version?: number; caseStudies?: SeedRecord[]; insights?: SeedRecord[] };
 
 function seedContentBaseline() {
-  const seedPath = join(process.cwd(), "data", "content-seed.json");
+  const seedPath = join(dataDir, "content-seed.json");
   if (!existsSync(seedPath)) return;
 
   let payload: SeedPayload;
