@@ -40,3 +40,8 @@ export function listSubmissions(): Submission[] {
     .prepare("SELECT * FROM submissions ORDER BY id DESC")
     .all() as Submission[];
 }
+
+export function countSubmissionsSince(days = 30): number {
+  const row = db.prepare("SELECT COUNT(*) AS count FROM submissions WHERE created_at >= datetime('now', ?)").get(`-${days} days`) as { count: number };
+  return row.count;
+}

@@ -97,6 +97,8 @@ db.exec(`
     event_type TEXT NOT NULL,
     content_type TEXT NOT NULL,
     content_id TEXT NOT NULL DEFAULT '',
+    source TEXT NOT NULL DEFAULT '',
+    country TEXT NOT NULL DEFAULT '',
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
   );
 
@@ -211,6 +213,8 @@ function addColumnIfMissing(table: string, column: string, ddl: string) {
   }
 }
 addColumnIfMissing("case_studies", "body", "body TEXT NOT NULL DEFAULT ''");
+addColumnIfMissing("analytics_events", "source", "source TEXT NOT NULL DEFAULT ''");
+addColumnIfMissing("analytics_events", "country", "country TEXT NOT NULL DEFAULT ''");
 addColumnIfMissing("case_studies", "category", "category TEXT NOT NULL DEFAULT ''");
 addColumnIfMissing("case_studies", "year", "year TEXT NOT NULL DEFAULT ''");
 addColumnIfMissing("case_studies", "outcome_eyebrow", "outcome_eyebrow TEXT NOT NULL DEFAULT 'OUTCOMES'");

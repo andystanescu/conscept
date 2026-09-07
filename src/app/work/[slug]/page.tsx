@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { Nav } from "@/components/Nav/Nav";
 import { Footer } from "@/components/Footer/Footer";
 import { RichContent } from "@/components/RichContent/RichContent";
@@ -19,7 +19,7 @@ import { getSettings } from "@/lib/settings";
 import { displayDate } from "@/lib/dateUtils";
 import { AuthorAvatar } from "@/components/AuthorAvatar/AuthorAvatar";
 import { ShareArticle } from "@/components/ShareArticle/ShareArticle";
-import { recordAnalyticsEvent } from "@/lib/analytics";
+import { recordAnalyticsEvent, visitorContextFromHeaders } from "@/lib/analytics";
 import headerStyles from "@/app/insights/[slug]/insight.module.css";
 
 export const dynamic = "force-dynamic";
@@ -48,7 +48,7 @@ export default async function CaseStudyDetailPage({ params, searchParams }: { pa
     const query = searchParams ? await searchParams : {};
     return <><Nav /><CaseStudyPasswordGate slug={study.slug} error={query.accessError ? "That password was not recognised." : undefined} /><Footer /></>;
   }
-  recordAnalyticsEvent("view", "case_study", study.slug);
+  recordAnalyticsEvent("view", "case_study", study.slug, visitorContextFromHeaders(await headers()));
   const { html: bodyHtml, toc } = addHeadingIds(study.body);
   const studies = getCaseStudies();
   const index = studies.findIndex((item) => item.slug === study.slug);
