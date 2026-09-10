@@ -12,7 +12,7 @@ import { addHeadingIds } from "@/lib/tableOfContents";
 import { TableOfContents } from "@/components/TableOfContents/TableOfContents";
 import { BackButton } from "@/components/BackButton/BackButton";
 import styles from "./case-study.module.css";
-import { CaseStudyPasswordGate } from "@/components/CaseStudyPasswordGate/CaseStudyPasswordGate";
+import { CaseStudyLockedContent } from "@/components/CaseStudyPasswordGate/CaseStudyLockedContent";
 import { caseStudyAccessCookieName, verifyCaseStudyAccessToken } from "@/lib/caseStudyAccess";
 import { contentMetadata, absoluteUrl } from "@/lib/seo";
 import { getSettings } from "@/lib/settings";
@@ -44,11 +44,8 @@ export default async function CaseStudyDetailPage({ params, searchParams }: { pa
   const cookieStore = await cookies();
   const accessToken = cookieStore.get(caseStudyAccessCookieName(study.slug))?.value;
   const accessGranted = !study.password_required || verifyCaseStudyAccessToken(accessToken, study.slug, passwordHashes);
-  if (!accessGranted) {
-    const query = searchParams ? await searchParams : {};
-    return <><Nav /><CaseStudyPasswordGate slug={study.slug} error={query.accessError ? "That password was not recognised." : undefined} /><Footer /></>;
-  }
   recordAnalyticsEvent("view", "case_study", study.slug, visitorContextFromHeaders(await headers()));
+  const query = searchParams ? await searchParams : {};
   const { html: bodyHtml, toc } = addHeadingIds(study.body);
   const studies = getCaseStudies();
   const index = studies.findIndex((item) => item.slug === study.slug);
@@ -79,6 +76,7 @@ export default async function CaseStudyDetailPage({ params, searchParams }: { pa
       url: absoluteUrl(`/work/${encodeURIComponent(study.slug)}`), image: study.cover_image ? absoluteUrl(study.cover_image) : undefined,
     }) }} />
     <Nav />
+    <CaseStudyLockedContent slug={study.slug} locked={!accessGranted} error={query.accessError ? "That password was not recognised." : undefined}>
     <main className={styles.main}>
       <section className={headerStyles.hero}>
         <div className={headerStyles.heroCopy}>
@@ -106,6 +104,7 @@ export default async function CaseStudyDetailPage({ params, searchParams }: { pa
       {(previous || next) && <nav className={`container ${styles.caseNav}`} aria-label="Case study navigation">{previous ? <Link href={`/work/${previous.slug}`}><span>Previous case study</span><strong>{previous.title}</strong></Link> : <span />}{next ? <Link href={`/work/${next.slug}`} className={styles.next}><span>Next case study</span><strong>{next.title}</strong></Link> : <span />}</nav>}
       {related.length > 0 && <section className={`container ${styles.related}`}><p className="label-eyebrow" style={{ color: "var(--text-accent)" }}>RELATED WORK</p><h2 className="heading-01">More case studies</h2><div className={styles.relatedGrid}>{related.map((item) => <ArticleCard key={item.slug} slug={item.slug} title={item.title} excerpt={item.description} thumbnail={item.thumbnail_image} variant="caseStudy" />)}</div><Link className={styles.allWork} href="/work">All case studies <span>→</span></Link></section>}
     </main>
+    </CaseStudyLockedContent>
     <Footer />
   </>;
 }
